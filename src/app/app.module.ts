@@ -14,7 +14,7 @@ import { TimeoutInterceptor } from './core/interceptors/timeout.interceptor';
 import { JwtMiddleware } from './core/middlewares/jwt.middleware';
 import { AccountModule } from './resources/account/account.module';
 import { AdminModule } from './resources/admin/admin.module';
-import { UserModule } from './resources/user/user.module';
+import { CashierModule } from './resources/cashier/cashier.module';
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
     controllers: [
@@ -26,8 +26,8 @@ import { UserModule } from './resources/user/user.module';
         AccountModule,
         //===================== ROLE ADMIN
         AdminModule,
-        //===================== ROLE USER
-        UserModule,
+        //===================== ROLE Cashier
+        CashierModule,
         //===================== END OF ROLE USER
         RouterModule.register(appRoutes),
     ],
@@ -53,9 +53,6 @@ export class AppModule implements NestModule {
                 {
                     path: 'api/account/auth/login', method: RequestMethod.POST
                 },
-                {
-                    path: 'api/qr/qr-verify', method: RequestMethod.GET
-                }
             ).forRoutes({ path: '*', method: RequestMethod.ALL });
     }
 }

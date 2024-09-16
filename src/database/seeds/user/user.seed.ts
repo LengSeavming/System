@@ -65,7 +65,7 @@ const data = {
     ],
     user_roles: [
         { user_id: 1, role_id: RoleEnum.ADMIN, added_id: 1, created_at: new Date(), is_default: true },
-        { user_id: 1, role_id: RoleEnum.USER, added_id: 1, created_at: new Date() },
+        { user_id: 1, role_id: RoleEnum.CASHIER, added_id: 1, created_at: new Date() },
     ],
 };
 

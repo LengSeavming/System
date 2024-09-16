@@ -10,10 +10,10 @@ export class UserMiddleware implements NestMiddleware {
         if (!userRoles || userRoles.length === 0) {
             throw new UnauthorizedException('Unauthorized: No roles found.');
         }
-        const userRole = userRoles.find(role => role.id === RoleEnum.USER);
+        const userRole = userRoles.find(role => role.id === RoleEnum.CASHIER);
 
         if (userRole) {
-            res.locals.roleId = RoleEnum.USER;
+            res.locals.roleId = RoleEnum.CASHIER;
             userRole.is_default = true;
         } else {
             throw new ForbiddenException('Access denied. You do not have the required permissions to access this route.');

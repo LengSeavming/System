@@ -8,10 +8,6 @@ import * as jwt from 'jsonwebtoken';
 import jwtConstants from "@app/shared/jwt/constants";
 import TokenPayload from '@app/shared/user.payload';
 
-/**
- * @author Yim Klok <yimklok.kh@gmail.com>
- * @returns user
- */
 const UserDecorator = createParamDecorator(async (_data, context: ExecutionContext) => {
     const request = context.switchToHttp().getRequest();
     const token: string = request.headers?.authorization?.split('Bearer ')[1];

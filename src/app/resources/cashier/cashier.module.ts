@@ -2,6 +2,7 @@
 import { UserMiddleware } from '@app/core/middlewares/user.middleware';
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { DashboardModule } from './dashbord/dashboard.module';
+import { SaleModule } from './sale/sale.module';
 
 // =========================================================================>> Custom Library
 
@@ -9,13 +10,14 @@ import { DashboardModule } from './dashbord/dashboard.module';
 @Module({
     imports: [
         DashboardModule,
+        SaleModule
     ]
 })
 
-export class UserModule implements NestModule {
+export class CashierModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(UserMiddleware)
-            .forRoutes({ path: 'api/user/*', method: RequestMethod.ALL });
+            .forRoutes({ path: 'api/cashier/*', method: RequestMethod.ALL });
     }
 }
