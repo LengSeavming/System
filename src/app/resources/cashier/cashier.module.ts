@@ -2,6 +2,7 @@
 import { UserMiddleware } from '@app/core/middlewares/user.middleware';
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { DashboardModule } from './dashbord/dashboard.module';
+import { OrderModule } from './order/order.module';
 import { SaleModule } from './sale/sale.module';
 
 // =========================================================================>> Custom Library
@@ -10,7 +11,8 @@ import { SaleModule } from './sale/sale.module';
 @Module({
     imports: [
         DashboardModule,
-        SaleModule
+        SaleModule,
+        OrderModule
     ]
 })
 

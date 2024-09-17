@@ -14,11 +14,10 @@ import { List } from './sale.types';
 @Injectable()
 export class SaleService {
 
-    async listing(userId: number, page_size: number = 10, page: number = 1, key?: string) {
+    async listing( page_size: number = 10, page: number = 1, key?: string) {
         try {
             const offset = (page - 1) * page_size;
             const where: any = {
-                cashier_id: userId,
                 [Op.and]: [
                     key ? Sequelize.where(
                         Sequelize.literal(`CAST("receipt_number" AS TEXT)`),

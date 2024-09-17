@@ -1,19 +1,15 @@
 // ================================================================>> Core Library
 import { Routes } from '@nestjs/core';
-import { DashboardModule } from './dashbord/dashboard.module';
 import { SaleModule } from './sale/sale.module';
+import { OrderModule } from './order/order.module';
 
 // ================================================================>> Custom Library
 
 
 export const cashierRoutes: Routes = [
     {
-        path: 'dashboard',
-        module: DashboardModule
-    },
-    {
-        path: 'pos',
-        module: DashboardModule
+        path: 'ordering',
+        module: OrderModule
     },
     {
         path: 'sales',

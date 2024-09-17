@@ -3,6 +3,7 @@ import { Routes } from '@nestjs/core';
 import { accountRoutes } from './resources/account/account.routes';
 import { adminRoutes } from './resources/admin/admin.routes';
 import { cashierRoutes } from './resources/cashier/cashier.routes';
+import { utilsRoutes } from './utils/utils.routes';
 // ================================================================>> Custom Library
 export const appRoutes: Routes = [{
     path: 'api',
@@ -18,6 +19,14 @@ export const appRoutes: Routes = [{
         {
             path: 'cashier',
             children: cashierRoutes
+        },
+        {
+            path: 'cashier',
+            children: cashierRoutes
+        },
+        {
+            path: 'share',
+            children: utilsRoutes
         },
     ]
 }];

@@ -8,13 +8,13 @@ import Product from './product.model';
 class ProductsType extends Model<ProductsType> {
 
     // ============================================================================================= Primary Key
-    @Column({ primaryKey: true, autoIncrement: true }) id: number;
+    @Column({ primaryKey: true, autoIncrement: true })                                              id: number;
 
     // ============================================================================================= Field
-    @Column({ allowNull: false, type: DataType.STRING(100) }) name: string;
-
+    @Column({ allowNull: false, type: DataType.STRING(100) })                                       name: string;
+    created_at: Date
     // ===========================================================================================>> One to Many
-    @HasMany(() => Product) products: Product[];
+    @HasMany(() => Product)                                                                         products: Product[];
 }
 
 export default ProductsType;

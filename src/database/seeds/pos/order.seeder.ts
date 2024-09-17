@@ -33,7 +33,7 @@ export class OrderSeeder {
             const receiptNumber = await OrderSeeder.generateReceiptNumber();
             ordersData.push({
                 receipt_number: receiptNumber,
-                cashier_id: Math.floor(Math.random() * (2 - 1) + 1),
+                cashier_id: Math.floor(Math.random() * (4 - 1) + 1),
                 total_price: 0,
                 ordered_at: new Date(),
             });
@@ -71,9 +71,12 @@ export class OrderSeeder {
         const details = [];
         const nOfDetails = Math.floor(Math.random() * (7 - 2 + 1) + 2);
 
+        const products = await Product.findAll();
+        const productIds = products.map(product => product.id);
+
         for (let i = 0; i < nOfDetails; i++) {
-            const randomProductId = Math.floor(Math.random() * (20 - 1) + 1);
-            const product = await Product.findOne({ where: { id: randomProductId } });
+            const randomProductId = productIds[Math.floor(Math.random() * productIds.length)];
+            const product = products.find(p => p.id === randomProductId);
 
             if (!product) {
                 console.error(`Product with id ${randomProductId} not found.`);
@@ -92,6 +95,7 @@ export class OrderSeeder {
 
         return details;
     }
+
 
     private static async generateReceiptNumber() {
         const number = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;

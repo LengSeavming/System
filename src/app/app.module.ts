@@ -15,6 +15,7 @@ import { JwtMiddleware } from './core/middlewares/jwt.middleware';
 import { AccountModule } from './resources/account/account.module';
 import { AdminModule } from './resources/admin/admin.module';
 import { CashierModule } from './resources/cashier/cashier.module';
+import { UtilsModule } from './utils/utils.module';
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
     controllers: [
@@ -28,6 +29,8 @@ import { CashierModule } from './resources/cashier/cashier.module';
         AdminModule,
         //===================== ROLE Cashier
         CashierModule,
+        //===================== Share 
+        UtilsModule,
         //===================== END OF ROLE USER
         RouterModule.register(appRoutes),
     ],

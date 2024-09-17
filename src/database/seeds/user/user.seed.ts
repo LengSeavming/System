@@ -49,15 +49,34 @@ export class UserSeeder {
 
 // Mock-data
 const data = {
-    role: [{ name: 'អ្នកគ្រប់គ្រង', slug: 'admin' }, { name: 'អ្នកប្រើប្រាស់', slug: 'user' }],
+    role: [{ name: 'អ្នកគ្រប់គ្រង', slug: 'admin' }, { name: 'អ្នកគិតប្រាក់', slug: 'cashier' }],
     users: [
         {
-    
-            name: 'Chan Suvannet',
+            name: 'ចាន់​ សុវ៉ាន់ណេត',
             phone: '0889566929',
             email: 'suvannetchan@gmail.com',
             password: '123456',
-            avatar: '',
+            avatar: 'upload/file/f9b94c44-ceda-44bf-b1bf-71866ce0d6c7',
+            creator_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
+        },
+        {
+            name: 'Heng Tongsour',
+            phone: '0889566930',
+            email: 'hengtongsour@gmail.com',
+            password: '123456',
+            avatar: 'upload/file/c07c5373-4be0-402f-a76b-a042f3315bd7',
+            creator_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
+        },
+        {
+            name: 'ENG SOKCHHENG',
+            phone: '012894154',
+            email: 'engsokchheng@gmail.com',
+            password: '123456',
+            avatar: 'upload/file/2a1b13a3-221b-4d4c-aedd-d32627f420b5',
             creator_id: 1,
             created_at: new Date(),
             updated_at: new Date(),
@@ -66,6 +85,8 @@ const data = {
     user_roles: [
         { user_id: 1, role_id: RoleEnum.ADMIN, added_id: 1, created_at: new Date(), is_default: true },
         { user_id: 1, role_id: RoleEnum.CASHIER, added_id: 1, created_at: new Date() },
+        { user_id: 2, role_id: RoleEnum.CASHIER, added_id: 1, created_at: new Date(), is_default: true },
+        { user_id: 3, role_id: RoleEnum.CASHIER, added_id: 1, created_at: new Date(), is_default: true },
     ],
 };
 

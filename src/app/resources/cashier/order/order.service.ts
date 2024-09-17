@@ -16,18 +16,23 @@ import { CreateOrderDto } from './order.pos.dto';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Injectable()
-export class PosService {
+export class OrderService {
 
     constructor(private telegramService: TelegramService) { };
 
-    // Method for retrieving products and organizing them by product types
     async getProducts(): Promise<{ data: { id: number, name: string, products: Product[] }[] }> {
         const data = await ProductsType.findAll({
             attributes: ['id', 'name'],
             include: [
                 {
                     model: Product,
-                    attributes: ['id', 'name', 'image', 'unit_price'],
+                    attributes: ['id', 'type_id', 'name', 'image', 'unit_price', 'code'],
+                    include: [
+                        {
+                            model: ProductsType,
+                            attributes: ['name'],
+                        },
+                    ],
                 },
             ],
             order: [['name', 'ASC']],
@@ -124,7 +129,6 @@ export class PosService {
             htmlMessage += `-លេខវិកយប័ត្រ៖ ${data.receipt_number}\n`;
             htmlMessage += `-អ្នកគិតលុយ៖ ${data.cashier?.name || ''}\n`;
             htmlMessage += `-កាលបរិច្ឆេទ: ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}\n`;
-            htmlMessage += `-From NestJS API\n`;
             // Send
             await this.telegramService.sendHTMLMessage(htmlMessage);
 

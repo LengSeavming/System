@@ -3,11 +3,17 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 // =========================================================================>> Custom Library
 import { AdminMiddleware } from '@app/core/middlewares/admin.middleware';
 import { DashboardModule } from './dashbord/dashboard.module';
+import { ProductModule } from './product/product.module';
+import { ProductsTypeModule } from './product/type/type.module';
+import { SaleModule } from './sale/sale.module';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
     imports: [
         DashboardModule,
+        SaleModule,
+        ProductModule,
+        ProductsTypeModule
     ]
 })
 

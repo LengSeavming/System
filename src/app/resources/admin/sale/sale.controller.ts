@@ -1,6 +1,4 @@
 // ================================================================>> Core Library
-import UserDecorator from '@app/core/decorators/user.decorator';
-import User from '@models/user/users.model';
 import { Controller, Delete, Get, HttpCode, HttpStatus, Param, Query } from '@nestjs/common';
 import { SaleService } from './sale.service';
 @Controller()
@@ -10,7 +8,6 @@ export class SaleController {
 
     @Get()
     async getAllSale(
-        @UserDecorator() auth: User,
         @Query('page_size') page_size?: number,
         @Query('page') page?: number,
         @Query('key') key?: string,
@@ -22,12 +19,12 @@ export class SaleController {
             page = 1;
         }
 
-        return await this._service.listing(auth.id, page_size, page, key);
+        return await this._service.listing(page_size, page, key);
     }
 
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
-    async delete(@Param('id') id: number): Promise<{message: string }> {
+    async delete(@Param('id') id: number): Promise<{ message: string }> {
         return await this._service.delete(id);
     }
 }
