@@ -6,6 +6,7 @@ import { DashboardModule } from './dashbord/dashboard.module';
 import { ProductModule } from './product/product.module';
 import { ProductsTypeModule } from './product/type/type.module';
 import { SaleModule } from './sale/sale.module';
+import { UserModule } from './user/user.module';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
@@ -13,7 +14,8 @@ import { SaleModule } from './sale/sale.module';
         DashboardModule,
         SaleModule,
         ProductModule,
-        ProductsTypeModule
+        ProductsTypeModule,
+        UserModule
     ]
 })
 
