@@ -41,15 +41,15 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-    
+
     async findAllWithRoleCashierAndAddTotalSale(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
         try {
             const dateFilter = this.getDateFilter(filters); // Use the date filter for today/yesterday
-            
+
             const cashiers = await User.findAll({
                 attributes: [
-                    'id', 
-                    'name', 
+                    'id',
+                    'name',
                     'avatar',
                     // Total sales amount calculation for the specified date range
                     [Sequelize.literal(`(
@@ -58,7 +58,7 @@ export class DashboardService {
                         WHERE o.cashier_id = "User".id
                         ${dateFilter && dateFilter['created_at'] ? `AND o.ordered_at BETWEEN '${dateFilter['created_at'][Op.gte].toISOString()}' AND '${dateFilter['created_at'][Op.lt].toISOString()}'` : ''}
                     )`), 'totalAmount'],
-                    
+
                     // Percentage change calculation between today and yesterday
                     [Sequelize.literal(`(
                         SELECT CASE
@@ -101,12 +101,12 @@ export class DashboardService {
                     },
                 ],
             });
-    
+
             // Check if the sales data for today and yesterday exists and log them
             if (cashiers.length === 0) {
                 console.log("No cashier data found for today or yesterday.");
             }
-    
+
             return {
                 data: cashiers,
             };
@@ -115,8 +115,8 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-    
-    
+
+
     // Helper method to construct date filter
     private getDateFilter(filters: { today?: string, yesterday?: string, thisWeek?: string, thisMonth?: string }): any {
         const dateFilter: { [key: string]: any } = {};
