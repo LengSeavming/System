@@ -11,6 +11,7 @@ export class UserDto {
     avatar: string;
     phone: string;
     email: string;
+    created_at: Date;
     roles: {
         id: number;
         name: string;
@@ -23,6 +24,7 @@ export class UserDto {
         this.avatar = user.avatar;
         this.phone = user.phone;
         this.email = user.email;
+        this.created_at= user.created_at,
         this.roles = user.roles.map(v => ({
             id: v.id,
             name: v.name,

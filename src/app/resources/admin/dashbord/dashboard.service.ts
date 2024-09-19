@@ -46,21 +46,21 @@ export class DashboardService {
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentWeek = this.getWeekNumber(currentDate); // Call to the helper method
-
+    
             const year = filters.year || currentYear;
             const week = filters.week || currentWeek;
-
+    
             // Generate the start and end date for the specified week and year
             const startDate = this.getStartDateOfISOWeek(week, year); // Call helper method
             const endDate = this.getEndDateOfISOWeek(week, year); // Call helper method
-
+    
             const dateFilter = {
                 'created_at': {
                     [Op.gte]: startDate.toISOString(),
                     [Op.lt]: endDate.toISOString(),
                 },
             };
-
+    
             const cashiers = await User.findAll({
                 attributes: [
                     'id',
@@ -73,7 +73,7 @@ export class DashboardService {
                         WHERE o.cashier_id = "User".id
                         ${dateFilter ? `AND o.ordered_at BETWEEN '${dateFilter['created_at'][Op.gte]}' AND '${dateFilter['created_at'][Op.lt]}'` : ''}
                     )`), 'totalAmount'],
-
+    
                     // Percentage change calculation between two weeks (current and previous week)
                     [Sequelize.literal(`(
                         SELECT CASE
@@ -110,12 +110,16 @@ export class DashboardService {
                         ],
                     },
                 ],
+                // Order by total sales in descending order (case-sensitive alias in quotes)
+                order: [
+                    [Sequelize.literal('"totalAmount"'), 'DESC'],
+                ],
             });
-
+    
             if (cashiers.length === 0) {
                 console.log("No cashier data found for the specified week.");
             }
-
+    
             return {
                 data: cashiers,
             };
@@ -124,7 +128,7 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-
+    
     async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {
         try {
             const currentDate = new Date();

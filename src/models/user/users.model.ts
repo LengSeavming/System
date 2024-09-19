@@ -30,7 +30,7 @@ class User extends Model<User> {
     // ===========================================================================================>> Many to One
     @BelongsTo(() => User, { foreignKey: 'creator_id', as: 'creator' })                             creator: User;
     @BelongsTo(() => User, { foreignKey: 'updater_id', as: 'updater' })                             updater: User;
-
+    created_at: Date
     // ===========================================================================================>> One to Many
     @HasMany(() => UserRoles)                                                                       role: UserRoles[];
 
