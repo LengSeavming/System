@@ -14,7 +14,7 @@ import { List } from './sale.types';
 @Injectable()
 export class SaleService {
 
-    async listing( page_size: number = 10, page: number = 1, key?: string) {
+    async listing(page_size: number = 10, page: number = 1, key?: string) {
         try {
             const offset = (page - 1) * page_size;
             const where: any = {

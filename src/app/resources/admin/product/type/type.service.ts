@@ -29,7 +29,7 @@ export class ProductsTypeService {
             group: ['ProductsType.id'], // Group by the ProductsType id
             order: [['name', 'ASC']], // Order by name
         });
-    
+
         // Formatting the result
         const dataFormat = data.map(type => ({
             id: type.id,
@@ -37,13 +37,13 @@ export class ProductsTypeService {
             created_at: type.created_at,
             n_of_products: type.get('n_of_products') || 0 // Using `get` method to access the alias field
         }));
-    
+
         // Returning the formatted data
         return {
             data: dataFormat as { id: number, name: string, created_at: Date, n_of_products: number }[]
         };
     }
-    
+
 
     async create(body: CreateProductTypeDto): Promise<{ data: ProductsType, message: string }> {
         const checkExistName = await ProductsType.findOne({

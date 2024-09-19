@@ -21,10 +21,6 @@ export const appRoutes: Routes = [{
             children: cashierRoutes
         },
         {
-            path: 'cashier',
-            children: cashierRoutes
-        },
-        {
             path: 'share',
             children: utilsRoutes
         },

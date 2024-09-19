@@ -19,13 +19,27 @@ export class DashboardController {
     }
 
     @Get('/cashier')
-    async getAllWithRoleCashierAndAddTotalSale(
-        @Query('today') today?: string,
-        @Query('yesterday') yesterday?: string,
-        @Query('thisWeek') thisWeek?: string,
-        @Query('thisMonth') thisMonth?: string,
+    async getCashierAndTotalSale(
+        @Query('year') year?: number,
+        @Query('week') week?: number,
     ) {
-        return await this._service.findAllWithRoleCashierAndAddTotalSale({ today, yesterday, thisWeek, thisMonth });
+        return await this._service.findCashierAndTotalSale({ year, week });
+    }
+
+    @Get('/product-type')
+    async getProductTypeWithProductHaveUsed(
+        @Query('year') year?: number,
+        @Query('week') week?: number,
+    ) {
+        return await this._service.findProductTypeWithProductHaveUsed({ year, week });
+    }
+
+    @Get('/data-sale')
+    async getDataSaleDayOfWeek(
+        @Query('year') year?: number,
+        @Query('week') week?: number,
+    ) {
+        return await this._service.findDataSaleDayOfWeek({ year, week });
     }
 
 }

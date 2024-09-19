@@ -10,9 +10,7 @@ import { Op, Sequelize } from 'sequelize';
 
 @Injectable()
 export class DashboardService {
-    constructor(
-    ) { }
-
+    
     async findStaticData(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
         try {
             const dateFilter = this.getDateFilter(filters);
@@ -42,49 +40,61 @@ export class DashboardService {
         }
     }
 
-    async findAllWithRoleCashierAndAddTotalSale(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
+    async findCashierAndTotalSale(filters: { year?: number; week?: number }) {
         try {
-            const dateFilter = this.getDateFilter(filters); // Use the date filter for today/yesterday
+            // Calculate the current week and year if no filter is provided
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentWeek = this.getWeekNumber(currentDate); // Call to the helper method
+
+            const year = filters.year || currentYear;
+            const week = filters.week || currentWeek;
+
+            // Generate the start and end date for the specified week and year
+            const startDate = this.getStartDateOfISOWeek(week, year); // Call helper method
+            const endDate = this.getEndDateOfISOWeek(week, year); // Call helper method
+
+            const dateFilter = {
+                'created_at': {
+                    [Op.gte]: startDate.toISOString(),
+                    [Op.lt]: endDate.toISOString(),
+                },
+            };
 
             const cashiers = await User.findAll({
                 attributes: [
                     'id',
                     'name',
                     'avatar',
-                    // Total sales amount calculation for the specified date range
+                    // Total sales amount calculation for the specified week
                     [Sequelize.literal(`(
                         SELECT COALESCE(SUM(o.total_price), 0)
                         FROM "order" AS o
                         WHERE o.cashier_id = "User".id
-                        ${dateFilter && dateFilter['created_at'] ? `AND o.ordered_at BETWEEN '${dateFilter['created_at'][Op.gte].toISOString()}' AND '${dateFilter['created_at'][Op.lt].toISOString()}'` : ''}
+                        ${dateFilter ? `AND o.ordered_at BETWEEN '${dateFilter['created_at'][Op.gte]}' AND '${dateFilter['created_at'][Op.lt]}'` : ''}
                     )`), 'totalAmount'],
 
-                    // Percentage change calculation between today and yesterday
+                    // Percentage change calculation between two weeks (current and previous week)
                     [Sequelize.literal(`(
                         SELECT CASE
-                            -- Case 1: No sales yesterday, but sales today
-                            WHEN COALESCE(yesterdaySales.total, 0) = 0 AND COALESCE(todaySales.total, 0) > 0 THEN 100
-                            
-                            -- Case 2: No sales today
-                            WHEN COALESCE(todaySales.total, 0) = 0 THEN 0
-                            
-                            -- Case 3: Normal percentage change calculation
-                            ELSE ((COALESCE(todaySales.total, 0) - COALESCE(yesterdaySales.total, 0)) / GREATEST(yesterdaySales.total, 1)) * 100
+                            WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100
+                            WHEN COALESCE(thisWeekSales.total, 0) = 0 THEN 0
+                            ELSE ((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) / GREATEST(lastWeekSales.total, 1)) * 100
                         END AS percentageChange
                         FROM (
-                            -- Subquery to calculate today's total sales
+                            -- Subquery to calculate this week's total sales
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
-                            ${filters.today ? `AND o.ordered_at::date = '${filters.today}'::date` : ''}
-                        ) AS todaySales,
+                            AND o.ordered_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'
+                        ) AS thisWeekSales,
                         (
-                            -- Subquery to calculate yesterday's total sales
+                            -- Subquery to calculate last week's total sales
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
-                            ${filters.yesterday ? `AND o.ordered_at::date = '${filters.yesterday}'::date` : ''}
-                        ) AS yesterdaySales
+                            AND o.ordered_at BETWEEN '${this.getStartDateOfISOWeek(week - 1, year).toISOString()}' AND '${this.getEndDateOfISOWeek(week - 1, year).toISOString()}'
+                        ) AS lastWeekSales
                     )`), 'percentageChange'],
                 ],
                 include: [
@@ -102,9 +112,8 @@ export class DashboardService {
                 ],
             });
 
-            // Check if the sales data for today and yesterday exists and log them
             if (cashiers.length === 0) {
-                console.log("No cashier data found for today or yesterday.");
+                console.log("No cashier data found for the specified week.");
             }
 
             return {
@@ -116,6 +125,141 @@ export class DashboardService {
         }
     }
 
+    async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {
+        try {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentWeek = this.getWeekNumber(currentDate);
+
+            const year = filters.year || currentYear;
+            const week = filters.week || currentWeek;
+
+            const startDate = this.getStartDateOfISOWeek(week, year);
+            const endDate = this.getEndDateOfISOWeek(week, year);
+
+            const productTypesWithProductCounts = await ProductsType.findAll({
+                attributes: [
+                    'id',
+                    'name',
+                    [Sequelize.literal(`(
+                        SELECT COUNT(*)
+                        FROM product AS p
+                        WHERE p.type_id = "ProductsType".id
+                        AND p.created_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'
+                    )`), 'productCount'],
+                ],
+                include: [
+                    {
+                        model: Product,
+                        attributes: [],
+                    },
+                ],
+                group: ['ProductsType.id'],
+            });
+
+            // Transform the data for donut chart format: { labels: [], data: [] }
+            const result = {
+                labels: productTypesWithProductCounts.map(pt => pt.name),
+                data: productTypesWithProductCounts.map(pt => pt.get('productCount')),
+            };
+
+            return result;
+
+        } catch (err) {
+            console.error("Error fetching product types and their counts:", err.message);
+            throw new BadRequestException(err.message);
+        }
+    }
+
+    async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
+        try {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentWeek = this.getWeekNumber(currentDate);
+
+            const year = filters.year || currentYear;
+            const week = filters.week || currentWeek;
+
+            const startDate = this.getStartDateOfISOWeek(week, year);
+            const endDate = this.getEndDateOfISOWeek(week, year);
+
+            // Fetch total sales grouped by day of the week for the specified week
+            const salesData = await Order.findAll({
+                attributes: [
+                    [Sequelize.fn('DATE_TRUNC', 'day', Sequelize.col('ordered_at')), 'day'],
+                    [Sequelize.fn('SUM', Sequelize.col('total_price')), 'total_sales'],
+                ],
+                where: {
+                    ordered_at: {
+                        [Op.between]: [startDate.toISOString(), endDate.toISOString()],
+                    },
+                },
+                group: ['day'],
+                order: [[Sequelize.literal('day'), 'ASC']],
+            });
+
+            // Initialize an array for Monday to Sunday, with default total_sales of 0
+            const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const salesByDay = weekDays.map(day => ({ day, total_sales: 0 }));
+
+            // Map sales data to the corresponding days of the week
+            salesData.forEach(sale => {
+                const saleDayValue = sale.get('day') as string;
+
+                // Convert saleDayValue to Date
+                const saleDay = new Date(saleDayValue);
+
+                if (!isNaN(saleDay.getTime())) {
+                    const saleDayOfWeek = saleDay.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                    const dayIndex = saleDayOfWeek === 0 ? 6 : saleDayOfWeek - 1; // Adjust index (Sunday -> 6, Monday -> 0)
+
+                    // Update the corresponding day with the total sales
+                    salesByDay[dayIndex].total_sales = parseFloat(sale.get('total_sales').toString());
+                }
+            });
+
+            // Transform the data into a format suitable for a bar chart
+            const result = {
+                labels: weekDays,
+                data: salesByDay.map(day => day.total_sales),
+            };
+
+            return result;
+
+        } catch (err) {
+            console.error("Error fetching sales data:", err.message);
+            throw new BadRequestException(err.message);
+        }
+    }
+
+    // Helper function to get the current week number
+    private getWeekNumber(date: Date): number {
+        const firstJan = new Date(date.getFullYear(), 0, 1);
+        const daysPassed = Math.ceil((date.getTime() - firstJan.getTime()) / (24 * 60 * 60 * 1000));
+        const weekNumber = Math.ceil((daysPassed + firstJan.getDay()) / 7);
+        return weekNumber;
+    }
+
+    // Helper function to get the start date of the ISO week
+    private getStartDateOfISOWeek(week: number, year: number): Date {
+        const simple = new Date(year, 0, 1 + (week - 1) * 7);
+        const dayOfWeek = simple.getDay();
+        const ISOweekStart = simple;
+        if (dayOfWeek <= 4) {
+            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        } else {
+            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        }
+        return ISOweekStart;
+    }
+
+    // Helper function to get the end date of the ISO week
+    private getEndDateOfISOWeek(week: number, year: number): Date {
+        const startDate = this.getStartDateOfISOWeek(week, year);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6); // Add 6 days to get the end of the week
+        return endDate;
+    }
 
     // Helper method to construct date filter
     private getDateFilter(filters: { today?: string, yesterday?: string, thisWeek?: string, thisMonth?: string }): any {
@@ -197,4 +341,5 @@ export class DashboardService {
             where: filter
         });
     }
+    
 }

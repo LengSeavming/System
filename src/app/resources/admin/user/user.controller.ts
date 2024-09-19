@@ -1,5 +1,5 @@
 // ================================================================>> Core Library
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
 
 // ================================================================>> Third party Library
 import * as bcrypt from 'bcryptjs';
@@ -8,7 +8,6 @@ import * as bcrypt from 'bcryptjs';
 
 
 // Shared
-import { FileService } from "src/app/services/file.service";
 
 // Inside Module
 import UserDecorator from "@app/core/decorators/user.decorator";
@@ -22,18 +21,18 @@ export class UserController {
 
     constructor(
         private userService: UserService,
-        private fileService: FileService
     ) { };
 
     @Get('setup')
     async setup() {
         return await this.userService.setup();
     }
+
     @Get()
-    async listing( @UserDecorator() auth: User,
-    @Query('page_size') page_size?: number,
-    @Query('page') page?: number,
-    @Query('key') key?: string,): Promise<List> {
+    async listing(@UserDecorator() auth: User,
+        @Query('page_size') page_size?: number,
+        @Query('page') page?: number,
+        @Query('key') key?: string,): Promise<List> {
         if (!page_size) {
             page_size = 10;
         }
@@ -42,8 +41,9 @@ export class UserController {
         }
         return await this.userService.listing(auth.id, page_size, page, key);
     }
+
     @Get('/:id')
-    async view(@Param('id', ParseIntPipe) id: number){
+    async view(@Param('id', ParseIntPipe) id: number) {
         return await this.userService.view(id);
     }
 

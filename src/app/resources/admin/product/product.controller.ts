@@ -12,12 +12,11 @@ export class ProductController {
 
     constructor(private _service: ProductService) { };
 
-    // Endpoint to perform setup operations, retrieving product types
     @Get('setup')
     async setup(): Promise<{ data: ProductsType[] }> {
         return await this._service.setup();
     }
-    
+
     @Get()
     async listing(
         @Query('page_size') page_size?: number,
