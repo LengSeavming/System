@@ -30,6 +30,7 @@ export class JwtTokenGenerator extends TokenGenerator {
                 phone: user.phone,
                 email: user.email,
                 avatar: user.avatar,
+                created_at: user.created_at,
                 roles: user.roles.map(v => ({
                     id: v.id,
                     name: v.name,

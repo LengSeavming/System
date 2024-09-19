@@ -49,7 +49,7 @@ export class ProfileService {
 
             // Fetch the updated user details (including their roles)
             const user = await User.findByPk(userId, {
-                attributes: ['id', 'name', 'avatar', 'phone', 'email', 'password'],
+                attributes: ['id', 'name', 'avatar', 'phone', 'email', 'password', 'created_at'],
                 include: [Role] // Include related roles
             });
 
