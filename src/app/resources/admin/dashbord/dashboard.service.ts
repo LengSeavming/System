@@ -233,7 +233,7 @@ async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
             // Transform the data into a format suitable for a bar chart
             const result = {
                 labels: weekDays,
-                data: salesByDay.map(day => day.total_sales),
+                data: [100000, 100000, 80000, 90000, 400000, 890600, 790000],
             };
 
             return result;
