@@ -10,7 +10,7 @@ import { Op, Sequelize } from 'sequelize';
 
 @Injectable()
 export class DashboardService {
-    
+
     async findStaticData(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
         try {
             const dateFilter = this.getDateFilter(filters);
@@ -45,36 +45,36 @@ export class DashboardService {
             // Calculate the current week and year if no filter is provided
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
-            const currentWeek = this.getWeekNumber(currentDate); // Call to the helper method
-    
+            const currentWeek = this.getWeekNumber(currentDate); // Helper method to get the week number
+
+            // Set year and week based on filters, defaulting to current year/week if not provided
             const year = filters.year || currentYear;
             const week = filters.week || currentWeek;
-    
-            // Generate the start and end date for the specified week and year
-            const startDate = this.getStartDateOfISOWeek(week, year); // Call helper method
-            const endDate = this.getEndDateOfISOWeek(week, year); // Call helper method
-    
-            const dateFilter = {
-                'created_at': {
-                    [Op.gte]: startDate.toISOString(),
-                    [Op.lt]: endDate.toISOString(),
-                },
-            };
-    
+
+            let startDate, endDate;
+            let dateCondition = '';
+
+            // If year and week are provided, calculate the start and end dates for the specified week
+            if (filters.year && filters.week) {
+                startDate = this.getStartDateOfISOWeek(week, year); // Helper method for start of week
+                endDate = this.getEndDateOfISOWeek(week, year); // Helper method for end of week
+                dateCondition = `AND o.ordered_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'`;
+            }
+
             const cashiers = await User.findAll({
                 attributes: [
                     'id',
                     'name',
                     'avatar',
-                    // Total sales amount calculation for the specified week
+                    // Total sales amount calculation (with or without date filtering)
                     [Sequelize.literal(`(
                         SELECT COALESCE(SUM(o.total_price), 0)
                         FROM "order" AS o
                         WHERE o.cashier_id = "User".id
-                        ${dateFilter ? `AND o.ordered_at BETWEEN '${dateFilter['created_at'][Op.gte]}' AND '${dateFilter['created_at'][Op.lt]}'` : ''}
+                        ${dateCondition}
                     )`), 'totalAmount'],
-    
-                    // Percentage change calculation between two weeks (current and previous week)
+
+                    // Percentage change calculation between current and previous weeks
                     [Sequelize.literal(`(
                         SELECT CASE
                             WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100
@@ -82,14 +82,14 @@ export class DashboardService {
                             ELSE ((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) / GREATEST(lastWeekSales.total, 1)) * 100
                         END AS percentageChange
                         FROM (
-                            -- Subquery to calculate this week's total sales
+                            -- This week's total sales (conditionally apply date filter)
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
-                            AND o.ordered_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'
+                            ${dateCondition}
                         ) AS thisWeekSales,
                         (
-                            -- Subquery to calculate last week's total sales
+                            -- Last week's total sales for comparison
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
@@ -110,16 +110,16 @@ export class DashboardService {
                         ],
                     },
                 ],
-                // Order by total sales in descending order (case-sensitive alias in quotes)
+                // Order by total sales in descending order
                 order: [
                     [Sequelize.literal('"totalAmount"'), 'DESC'],
                 ],
             });
-    
+
             if (cashiers.length === 0) {
                 console.log("No cashier data found for the specified week.");
             }
-    
+
             return {
                 data: cashiers,
             };
@@ -128,18 +128,27 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-    
+
+
     async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {
         try {
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentWeek = this.getWeekNumber(currentDate);
 
+            // Use the provided year and week or default to the current ones
             const year = filters.year || currentYear;
             const week = filters.week || currentWeek;
 
-            const startDate = this.getStartDateOfISOWeek(week, year);
-            const endDate = this.getEndDateOfISOWeek(week, year);
+            let dateCondition = '';
+
+            // If filters are provided, create the date condition for filtering
+            if (filters.year && filters.week) {
+                const startDate = this.getStartDateOfISOWeek(week, year);
+                const endDate = this.getEndDateOfISOWeek(week, year);
+
+                dateCondition = `AND p.created_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'`;
+            }
 
             const productTypesWithProductCounts = await ProductsType.findAll({
                 attributes: [
@@ -149,19 +158,19 @@ export class DashboardService {
                         SELECT COUNT(*)
                         FROM product AS p
                         WHERE p.type_id = "ProductsType".id
-                        AND p.created_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'
+                        ${dateCondition}  -- Apply the date condition if filters are present
                     )`), 'productCount'],
                 ],
                 include: [
                     {
                         model: Product,
-                        attributes: [],
+                        attributes: [],  // No need to retrieve product attributes, just count them
                     },
                 ],
                 group: ['ProductsType.id'],
             });
 
-            // Transform the data for donut chart format: { labels: [], data: [] }
+            // Transform the data into the format expected by a donut chart: { labels: [], data: [] }
             const result = {
                 labels: productTypesWithProductCounts.map(pt => pt.name),
                 data: productTypesWithProductCounts.map(pt => pt.get('productCount')),
@@ -174,8 +183,7 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-
-    async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
+async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
         try {
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
@@ -235,6 +243,7 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
+
 
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {
@@ -345,5 +354,5 @@ export class DashboardService {
             where: filter
         });
     }
-    
+
 }
