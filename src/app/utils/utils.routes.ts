@@ -1,9 +1,8 @@
-// ================================================================>> Core Library
-import { Routes } from '@nestjs/core';
+// ===========================================================================>> Core Library
 import { InvoiceModule } from './invoice/invoice.module';
 
-// ================================================================>> Custom Library
-
+// ===========================================================================>> Custom Library
+import { Routes } from '@nestjs/core';
 
 export const utilsRoutes: Routes = [
     {

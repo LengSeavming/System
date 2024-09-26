@@ -1,11 +1,11 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 
-// ================================================================>> Third Party Library
+// ===========================================================================>> Third Party Library
 import * as bcrypt from 'bcryptjs';
 import { DatabaseError, Op } from 'sequelize';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 // Model
 import Role from '@models/user/role.model';
 import User from '@models/user/users.model';

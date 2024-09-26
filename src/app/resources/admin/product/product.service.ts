@@ -1,10 +1,10 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
-// ================================================================>> Third Party Library
+// ============================================================================>> Third Party Library
 import { Op } from 'sequelize';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 import { FileService } from 'src/app/services/file.service';
 import Product from 'src/models/product/product.model';
 import ProductsType from 'src/models/product/type.model';

@@ -1,16 +1,13 @@
-// =========================================================================>> Core Library
-import { UserMiddleware } from '@app/core/middlewares/user.middleware';
+// ===========================================================================>> Core Library
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
-import { DashboardModule } from './dashbord/dashboard.module';
+
+// ===========================================================================>> Custom Library
+import { UserMiddleware } from '@app/core/middlewares/user.middleware';
 import { OrderModule } from './order/order.module';
 import { SaleModule } from './sale/sale.module';
 
-// =========================================================================>> Custom Library
-
-// ======================================= >> Code Starts Here << ========================== //
 @Module({
     imports: [
-        DashboardModule,
         SaleModule,
         OrderModule
     ]

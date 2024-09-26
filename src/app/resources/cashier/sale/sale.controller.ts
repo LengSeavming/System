@@ -1,8 +1,11 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
+import { Controller, Delete, Get, HttpCode, HttpStatus, Param, Query } from '@nestjs/common';
+
+// ===========================================================================>> Custom Library
 import UserDecorator from '@app/core/decorators/user.decorator';
 import User from '@models/user/users.model';
-import { Controller, Delete, Get, HttpCode, HttpStatus, Param, Query } from '@nestjs/common';
 import { SaleService } from './sale.service';
+
 @Controller()
 export class SaleController {
 

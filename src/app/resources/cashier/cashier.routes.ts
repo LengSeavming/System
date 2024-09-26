@@ -1,9 +1,10 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { Routes } from '@nestjs/core';
-import { SaleModule } from './sale/sale.module';
-import { OrderModule } from './order/order.module';
 
-// ================================================================>> Custom Library
+// ===========================================================================>> Custom Library
+import { OrderModule } from './order/order.module';
+import { SaleModule } from './sale/sale.module';
+
 
 
 export const cashierRoutes: Routes = [

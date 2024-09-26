@@ -1,11 +1,11 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
+import { Body, Controller, Put } from '@nestjs/common';
+
+// ===========================================================================>> Costom Library
 import UserDecorator from '@app/core/decorators/user.decorator';
 import User from '@models/user/users.model';
-import { Body, Controller, Put } from '@nestjs/common';
 import { UpdatePasswordDto, UpdateUserDto } from './profile.dto';
 import { ProfileService } from './profile.service';
-
-
 @Controller()
 export class ProfileController {
 

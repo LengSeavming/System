@@ -1,8 +1,8 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import User from '@models/user/users.model';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 import { JwtTokenGenerator, TokenGenerator } from '@app/shared/jwt/token';
 import Role from '@models/user/role.model';
 import { FileService } from 'src/app/services/file.service';

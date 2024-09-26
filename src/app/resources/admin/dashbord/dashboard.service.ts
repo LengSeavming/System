@@ -1,3 +1,10 @@
+// ===========================================================================>> Core Library
+import { BadRequestException, Injectable } from '@nestjs/common';
+
+// ===========================================================================>> Third Party Library
+import { Op, Sequelize } from 'sequelize';
+
+// ===========================================================================>> Custom Library
 import { RoleEnum } from '@app/enums/role.enum';
 import Order from '@models/order/order.model';
 import Product from '@models/product/product.model';
@@ -5,8 +12,6 @@ import ProductsType from '@models/product/type.model';
 import Role from '@models/user/role.model';
 import UserRoles from '@models/user/user_roles.model';
 import User from '@models/user/users.model';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Op, Sequelize } from 'sequelize';
 
 @Injectable()
 export class DashboardService {
@@ -183,7 +188,8 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
+
+    async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
         try {
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
@@ -243,7 +249,6 @@ async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
             throw new BadRequestException(err.message);
         }
     }
-
 
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {

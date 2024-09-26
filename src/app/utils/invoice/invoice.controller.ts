@@ -1,11 +1,12 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { BadRequestException, Controller, Get, Param, Query } from '@nestjs/common';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 import { InvoiceService } from './invoice.service';
 
 @Controller()
 export class InvoiceController {
+    
     constructor(private readonly _service: InvoiceService) { };
 
     @Get('order-invoice/:receiptNumber')

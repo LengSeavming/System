@@ -1,7 +1,7 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { SequelizeModuleOptions } from '@nestjs/sequelize';
 
-// ================================================================>> Third Party Library
+// ===========================================================================>> Third Party Library
 import * as dotenv from 'dotenv';
 import { Dialect } from 'sequelize';
 
