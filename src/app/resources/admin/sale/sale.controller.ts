@@ -1,5 +1,7 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { Controller, Delete, Get, HttpCode, HttpStatus, Param, Query } from '@nestjs/common';
+
+// ===========================================================================>> Costom Library
 import { SaleService } from './sale.service';
 @Controller()
 export class SaleController {

@@ -1,4 +1,4 @@
-// =========================================================================>> Custom Library
+// ===========================================================================>> Custom Library
 import { IsNotEmpty, IsString } from 'class-validator'
 
 export class CreateProductTypeDto {

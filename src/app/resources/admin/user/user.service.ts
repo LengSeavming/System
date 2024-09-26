@@ -1,10 +1,10 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 
-// ================================================================>> Third Party Library
+// ===========================================================================>> Third Party Library
 import { Op } from "sequelize";
 
-// ================================================================>> Custom Library
+// ===========================================================================>> Custom Library
 import Role from "@models/user/role.model";
 import UserRoles from "@models/user/user_roles.model";
 import User from "@models/user/users.model";

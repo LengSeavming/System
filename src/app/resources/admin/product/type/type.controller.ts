@@ -1,7 +1,7 @@
-// =========================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 
-// =========================================================================>> Custom Library
+// ===========================================================================>> Custom Library
 import ProductsType from 'src/models/product/type.model';
 import { CreateProductTypeDto, UpdateProductTypeDto } from './type.dto';
 import { ProductsTypeService } from './type.service';

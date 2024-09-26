@@ -1,7 +1,7 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UsePipes } from '@nestjs/common';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 import { ProductsTypeExistsPipe } from '@app/core/pipes/product.pipe';
 import Product from 'src/models/product/product.model';
 import ProductsType from 'src/models/product/type.model';

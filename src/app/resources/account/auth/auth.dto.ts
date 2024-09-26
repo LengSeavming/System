@@ -1,8 +1,8 @@
 
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { IsNotEmpty, IsString } from 'class-validator';
 
-// ================================================================>> Costom Library
+// ===========================================================================>> Costom Library
 import User from '@models/user/users.model';
 
 export class UserDto {

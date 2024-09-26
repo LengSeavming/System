@@ -1,15 +1,10 @@
-// ================================================================>> Core Library
+// ===========================================================================>> Core Library
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
 
-// ================================================================>> Third party Library
+// ===========================================================================>> Third party Library
 import * as bcrypt from 'bcryptjs';
 
-// ================================================================>> Costom Library
-
-
-// Shared
-
-// Inside Module
+// ===========================================================================>> Costom Library
 import UserDecorator from "@app/core/decorators/user.decorator";
 import User from "@models/user/users.model";
 import { CreateUserDto, UpdatePasswordDto, UpdateStatusDto, UpdateUserDto } from "./user.dto";
