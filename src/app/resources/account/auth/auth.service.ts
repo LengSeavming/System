@@ -117,7 +117,7 @@ export class AuthService {
                     id: auth.id,
                     is_active: ActiveEnum.ACTIVE
                 },
-                attributes: ['id', 'name', 'avatar', 'phone', 'email', 'password'
+                attributes: ['id', 'name', 'avatar', 'phone', 'email', 'password', 'created_at'
                 ],
                 include: [Role]
             });
