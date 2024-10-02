@@ -5,6 +5,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Sequelize, Transaction } from 'sequelize';
 
 // =========================================================================>> Custom Library
+import Notifications from '@models/notification/notification.model';
 import User from '@models/user/users.model';
 import { TelegramService } from 'src/app/services/telegram.service';
 import sequelizeConfig from 'src/config/sequelize.config';
@@ -98,6 +99,12 @@ export class OrderService {
                     transaction,
                 }
             );
+            
+            await Notifications.create({
+                order_id: order.id,
+                user_id: cashierId,
+                read: false
+            }, { transaction });
 
             // Get Data for Client Response to view the order in Popup
             const data: Order = await Order.findByPk(order.id, {

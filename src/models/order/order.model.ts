@@ -4,6 +4,7 @@ import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from '
 // ================================================================================================= Custom Library
 import User from '@models/user/users.model';
 import OrderDetails from './detail.model';
+import Notifications from '@models/notification/notification.model';
 
 @Table({ tableName: 'order', createdAt: 'created_at', updatedAt: 'updated_at' })
 class Order extends Model<Order> {
@@ -24,6 +25,7 @@ class Order extends Model<Order> {
 
     // ============================================================================================= One to Many
     @HasMany(() => OrderDetails)                                                                    details: OrderDetails[]
+    @HasMany(() => Notifications)                                                                    notifications: Notifications[];
 }
 
 export default Order;
