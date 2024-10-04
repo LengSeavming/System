@@ -134,14 +134,14 @@ export class OrderService {
             // Commit transaction after successful operations
             await transaction.commit();
     
-            // Send Telegram Notification
-            const htmlMessage = `
-                <b>ការបញ្ជាទិញទទួលបានជោគជ័យ!</b>\n
-                - លេខវិកយប័ត្រ៖ ${data.receipt_number}\n
-                - អ្នកគិតលុយ៖ ${data.cashier?.name || ''}\n
-                - កាលបរិច្ឆេទ: ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}
-            `;
+            let htmlMessage = `<b>ការបញ្ជាទិញទទួលបានជោគជ័យ!</b>\n`;
+            htmlMessage += `-លេខវិកយប័ត្រ ៖ ${data.receipt_number}\n`;
+            htmlMessage += `-តម្លៃសរុប​​     ៖ ${data.total_price}\n`;
+            htmlMessage += `-អ្នកគិតលុយ   ៖ ${data.cashier?.name || ''}\n`;
+            htmlMessage += `-កាលបរិច្ឆេទ   ៖ ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}\n`;
+            // Send
             await this.telegramService.sendHTMLMessage(htmlMessage);
+
     
             return { data, message: 'ការបញ្ជាទិញត្រូវបានបង្កើតដោយជោគជ័យ។' };
     
