@@ -191,16 +191,19 @@ export class DashboardService {
 
     async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
         try {
+            console.log(filters.week)
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentWeek = this.getWeekNumber(currentDate);
-
+    
+            // Use filters if provided, otherwise default to the current year and week
             const year = filters.year || currentYear;
             const week = filters.week || currentWeek;
-
+    
+            // Get start and end date of the selected or current week
             const startDate = this.getStartDateOfISOWeek(week, year);
             const endDate = this.getEndDateOfISOWeek(week, year);
-
+    
             // Fetch total sales grouped by day of the week for the specified week
             const salesData = await Order.findAll({
                 attributes: [
@@ -215,40 +218,41 @@ export class DashboardService {
                 group: ['day'],
                 order: [[Sequelize.literal('day'), 'ASC']],
             });
-
+    
             // Initialize an array for Monday to Sunday, with default total_sales of 0
             const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const salesByDay = weekDays.map(day => ({ day, total_sales: 0 }));
-
+    
             // Map sales data to the corresponding days of the week
             salesData.forEach(sale => {
                 const saleDayValue = sale.get('day') as string;
-
+    
                 // Convert saleDayValue to Date
                 const saleDay = new Date(saleDayValue);
-
+    
                 if (!isNaN(saleDay.getTime())) {
                     const saleDayOfWeek = saleDay.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                     const dayIndex = saleDayOfWeek === 0 ? 6 : saleDayOfWeek - 1; // Adjust index (Sunday -> 6, Monday -> 0)
-
+    
                     // Update the corresponding day with the total sales
                     salesByDay[dayIndex].total_sales = parseFloat(sale.get('total_sales').toString());
                 }
             });
-
-            // Transform the data into a format suitable for a bar chart
+    
+            // Extract labels (days of the week) and data (total sales)
             const result = {
-                labels: weekDays,
-                data: [100000, 100000, 80000, 90000, 400000, 890600, 790000],
+                labels: salesByDay.map(s => s.day),
+                data: salesByDay.map(s => s.total_sales),
             };
-
+    
             return result;
-
+    
         } catch (err) {
             console.error("Error fetching sales data:", err.message);
             throw new BadRequestException(err.message);
         }
     }
+    
 
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {
