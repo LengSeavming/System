@@ -84,8 +84,6 @@ export class SaleService {
 
     async view(id: number) {
         try {
-            
-
             const data = await Order.findByPk(id,{
                 attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
                 include: [
@@ -122,7 +120,6 @@ export class SaleService {
             throw new BadRequestException(error.message);
         }
     }
-
 
     async delete(id: number): Promise<{ message: string }> {
         try {

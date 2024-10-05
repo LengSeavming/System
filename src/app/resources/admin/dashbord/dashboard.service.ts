@@ -253,7 +253,6 @@ export class DashboardService {
         }
     }
     
-
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {
         const firstJan = new Date(date.getFullYear(), 0, 1);

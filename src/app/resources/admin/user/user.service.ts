@@ -17,12 +17,10 @@ export class UserService {
 
     constructor(private readonly fileService: FileService) { };
 
-
     async setup(): Promise<{ roles: { id: number; name: string }[] }> {
         const roles = await Role.findAll({
             attributes: ['id', 'name'],
         });
-
         return { roles: roles };
     }
 
@@ -75,6 +73,7 @@ export class UserService {
 
         return dataFormat;
     }
+
     async view(userId: number) {
         const data = await User.findByPk(userId, {
             attributes: ['id', 'name', 'avatar', 'phone', 'email', 'is_active', 'created_at'],
@@ -178,11 +177,11 @@ export class UserService {
         return dataFormat;
     }
     
-
     private isValidBase64(str: string): boolean {
         const base64Pattern = /^data:image\/(jpeg|png|gif|bmp|webp);base64,[a-zA-Z0-9+/]+={0,2}$/;
         return base64Pattern.test(str);
     }
+
     async update(userId: number, body: UpdateUserDto, updaterId: number): Promise<Update> {
         // Find the current user
         let currentUser: User;
@@ -295,8 +294,6 @@ export class UserService {
         };
         return dataFormat;
     }
-
-
 
     async delete(userId: number): Promise<{ message: string }> {
         try {

@@ -15,8 +15,8 @@ class User extends Model<User> {
     // ============================================================================================= Field
     @Column({ allowNull: true, type: DataType.STRING(200), defaultValue: 'static/avatar.png' })     avatar: string;
     @Column({ allowNull: false, type: DataType.STRING(50) })                                        name: string;
-    @Column({ allowNull: true, unique: true, type: DataType.STRING(100) })                          email: string;
-    @Column({ allowNull: false, unique: true, type: DataType.STRING(100) })                         phone: string;
+    @Column({ allowNull: true, type: DataType.STRING(100) })                                        email: string;
+    @Column({ allowNull: false,type: DataType.STRING(100) })                                        phone: string;
     @Column({ allowNull: false, type: DataType.STRING(100), set(value: string) 
         {const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(value, salt);

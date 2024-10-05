@@ -5,8 +5,6 @@ import { Routes } from '@nestjs/core';
 import { OrderModule } from './order/order.module';
 import { SaleModule } from './sale/sale.module';
 
-
-
 export const cashierRoutes: Routes = [
     {
         path: 'ordering',

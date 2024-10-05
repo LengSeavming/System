@@ -36,7 +36,6 @@ export class DashboardController {
     ) {
         return await this._service.findProductTypeWithProductHaveUsed({ year, week });
     }
-
     @Get('/data-sale')
     async getDataSaleDayOfWeek(
         @Query('year') year?: number,
