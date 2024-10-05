@@ -109,12 +109,12 @@ export class UserService {
         } catch (error) {
             throw new BadRequestException('Something went wrong. Please try again later.', 'Error Query');
         }
-
+    
         // If user already exists, throw an error
         if (user) {
             throw new BadRequestException('Email or phone already exists!');
         }
-
+    
         // Upload the avatar image to the file service
         const result = await this.fileService.uploadBase64Image('user', body.avatar);
         if (result.error) {
@@ -122,36 +122,43 @@ export class UserService {
         }
         // Set the avatar to the file URI returned from the file service
         body.avatar = result.file.uri;
-
+    
+        let createdUser;
         // Create the new user in the database
-        const createdUser = await User.create({
-            name: body.name,
-            avatar: body.avatar,
-            phone: body.phone,
-            email: body.email,
-            password: body.password,
-            creator_id: userId
-        });
-
+        try {
+            createdUser = await User.create({
+                name: body.name,
+                avatar: body.avatar,
+                phone: body.phone,
+                email: body.email,
+                password: body.password,
+                creator_id: userId
+            });
+        } catch (err) {
+            console.error('Error creating user:', err); // Log the error
+            throw new BadRequestException('Failed to create user');
+        }
+    
         // Assign roles to the user by creating entries in the UserRoles table
         if (body.role_ids && body.role_ids.length > 0) {
-            const userRoles = body.role_ids.map(roleId => ({
+            const userRoles = body.role_ids.map((roleId, index) => ({
                 user_id: createdUser.id,
                 role_id: roleId,
                 added_id: userId, // The creator who added the roles
                 created_at: new Date(),
-                is_default: false // Assuming roles are not default, adjust if necessary
+                is_default: index === 0 // Set is_default to true only for the first role
             }));
+    
             await UserRoles.bulkCreate(userRoles);
         }
-
+    
         // Fetch the created user data including the roles for response
         const data = await User.findByPk(createdUser.id, {
             attributes: ['id', 'name', 'avatar', 'phone', 'email', 'is_active', 'created_at'],
             include: [
                 {
                     model: UserRoles,
-                    attributes: ['id', 'role_id'],
+                    attributes: ['id', 'role_id', 'is_default'], // Including is_default in the response
                     include: [
                         {
                             model: Role,
@@ -161,15 +168,16 @@ export class UserService {
                 }
             ],
         });
-
+    
         // Format the response
         const dataFormat: Create = {
             data: data,
             message: "User has been created"
         };
-
+    
         return dataFormat;
     }
+    
 
     private isValidBase64(str: string): boolean {
         const base64Pattern = /^data:image\/(jpeg|png|gif|bmp|webp);base64,[a-zA-Z0-9+/]+={0,2}$/;

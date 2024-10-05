@@ -2,7 +2,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
 
 // ===========================================================================>> Third party Library
-import * as bcrypt from 'bcryptjs';
 
 // ===========================================================================>> Costom Library
 import UserDecorator from "@app/core/decorators/user.decorator";
@@ -44,8 +43,6 @@ export class UserController {
 
     @Post()
     async create(@Body() body: CreateUserDto, @UserDecorator() user: User): Promise<Create> {
-        const passwordHash = await bcrypt.hash(body.password, 12);
-        body.password = passwordHash;
         return this.userService.create(body, user.id);
     }
 
