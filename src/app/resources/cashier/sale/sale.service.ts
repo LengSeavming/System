@@ -82,6 +82,47 @@ export class SaleService {
         }
     }
 
+    async view(id: number) {
+        try {
+            
+
+            const data = await Order.findByPk(id,{
+                attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
+                include: [
+                    {
+                        model: OrderDetails,
+                        attributes: ['id', 'unit_price', 'qty'],
+                        include: [
+                            {
+                                model: Product,
+                                attributes: ['id', 'name', 'code', 'image'],
+                                include: [
+                                    {
+                                        model: ProductsType,
+                                        attributes: ['name'],
+                                    }
+                                ]
+                            },
+                        ],
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'avatar', 'name'],
+                    },
+                ],
+            });
+
+            const dataFormat = {
+                status: 'success',
+                data: data,
+            };
+
+            return dataFormat;
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
+    }
+
 
     async delete(id: number): Promise<{ message: string }> {
         try {
