@@ -53,105 +53,110 @@ export class OrderService {
         // Initializing DB Connection
         const sequelize = new Sequelize(sequelizeConfig);
         let transaction: Transaction;
-
+    
         try {
             // Open DB Connection
             transaction = await sequelize.transaction();
-
+    
             // Create an order using method create()
             const order = await Order.create({
                 cashier_id: cashierId,
-                total_price: 0,
+                total_price: 0, // Initialize with 0, will update later
                 receipt_number: await this._generateReceiptNumber(),
-                ordered_at: null
+                ordered_at: null, // Will be updated later
             }, { transaction });
-
-            // Find Total Price & Order Detail
+    
+            // Find Total Price & Order Details
             let totalPrice = 0;
-            const cartItems = JSON.parse(body.cart);
-
+            const cartItems = JSON.parse(body.cart); // Assuming cart is a JSON string
+    
+            // Loop through cart items and calculate total price
             for (const [productId, qty] of Object.entries(cartItems)) {
-                const product = await Product.findByPk(parseInt(productId));
-
+                const product = await Product.findByPk(parseInt(productId)); // Find product by its ID
+    
                 if (product) {
-                    // Save to Details
+                    // Save to Order Details
                     await OrderDetails.create({
                         order_id: order.id,
                         product_id: product.id,
                         qty: Number(qty),
-                        unit_price: product.unit_price
+                        unit_price: product.unit_price,
                     }, { transaction });
-
-                    totalPrice += Number(qty) * product.unit_price;
+    
+                    totalPrice += Number(qty) * product.unit_price; // Add to total price
                 }
             }
-
+    
             // Update Order with total price and ordered_at timestamp
-            await Order.update(
-                {
-                    total_price: totalPrice,
-                    ordered_at: new Date()
-                },
-                {
-                    where: {
-                        id: order.id,
-                    },
-                    transaction,
-                }
-            );
-            
+            await Order.update({
+                total_price: totalPrice,
+                ordered_at: new Date(),
+            }, {
+                where: { id: order.id },
+                transaction,
+            });
+    
+            // Create notification for this order
             await Notifications.create({
                 order_id: order.id,
                 user_id: cashierId,
-                read: false
+                read: false,
             }, { transaction });
-
-            // Get Data for Client Response to view the order in Popup
+    
+            // Get order details for client response
             const data: Order = await Order.findByPk(order.id, {
                 attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
                 include: [
-                    {
-                        model: User,
-                        attributes: ['id', 'name'],
-                    },
                     {
                         model: OrderDetails,
                         attributes: ['id', 'unit_price', 'qty'],
                         include: [
                             {
                                 model: Product,
-                                attributes: ['id', 'name'],
-                            }
-                        ]
+                                attributes: ['id', 'name', 'code', 'image'],
+                                include: [
+                                    {
+                                        model: ProductsType,
+                                        attributes: ['name'],
+                                    }
+                                ]
+                            },
+                        ],
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'avatar', 'name'],
                     },
                 ],
-                transaction,
+                transaction, // Ensure this is inside the same transaction
             });
-
+    
+            // Commit transaction after successful operations
             await transaction.commit();
-
-            // Send Telegram Notification
-            // Prepare Format
+    
             let htmlMessage = `<b>ការបញ្ជាទិញទទួលបានជោគជ័យ!</b>\n`;
-            htmlMessage += `-លេខវិកយប័ត្រ៖ ${data.receipt_number}\n`;
-            htmlMessage += `-អ្នកគិតលុយ៖ ${data.cashier?.name || ''}\n`;
-            htmlMessage += `-កាលបរិច្ឆេទ: ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}\n`;
+            htmlMessage += `-លេខវិកយប័ត្រ ៖ ${data.receipt_number}\n`;
+            htmlMessage += `-តម្លៃសរុប​​     ៖ ${data.total_price}\n`;
+            htmlMessage += `-អ្នកគិតលុយ   ៖ ${data.cashier?.name || ''}\n`;
+            htmlMessage += `-កាលបរិច្ឆេទ   ៖ ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}\n`;
             // Send
             await this.telegramService.sendHTMLMessage(htmlMessage);
 
+    
             return { data, message: 'ការបញ្ជាទិញត្រូវបានបង្កើតដោយជោគជ័យ។' };
-
+    
         } catch (error) {
             if (transaction) {
-                await transaction.rollback();
+                await transaction.rollback(); // Rollback transaction on error
             }
-
-            // Handle specific errors, if needed
             console.error('Error during order creation:', error);
-
-            throw new BadRequestException('Something went wrong!. Please try again later.', 'Error during order creation.');
+            throw new BadRequestException('Something went wrong! Please try again later.', 'Error during order creation.');
+        } finally {
+            // Close DB connection if necessary
+            await sequelize.close(); // Close sequelize connection
         }
     }
+    
 
     // Private method to generate a unique receipt number
     private async _generateReceiptNumber(): Promise<number> {

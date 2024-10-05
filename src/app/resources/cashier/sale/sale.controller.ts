@@ -27,6 +27,12 @@ export class SaleController {
 
         return await this._service.listing(auth.id, page_size, page, key);
     }
+    @Get(':id/view')
+    async view(@Param('id') id: number
+        
+    ) {
+        return await this._service.view(id);
+    }
 
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
