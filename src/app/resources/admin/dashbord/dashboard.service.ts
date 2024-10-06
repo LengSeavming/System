@@ -191,7 +191,6 @@ export class DashboardService {
 
     async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
         try {
-            console.log(filters.week)
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentWeek = this.getWeekNumber(currentDate);
@@ -204,16 +203,21 @@ export class DashboardService {
             const startDate = this.getStartDateOfISOWeek(week, year);
             const endDate = this.getEndDateOfISOWeek(week, year);
     
+            // Define an alias for the computed column
+            const dateTrunc = Sequelize.fn('DATE', Sequelize.col('ordered_at'));
+    
             // Fetch total sales grouped by day of the week for the specified week
             const salesData = await Order.findAll({
                 attributes: [
-                    [Sequelize.fn('DATE_TRUNC', 'day', Sequelize.col('ordered_at')), 'day'],
+                    [dateTrunc, 'day'], // Use the alias for the computed date column
                     [Sequelize.fn('SUM', Sequelize.col('total_price')), 'total_sales'],
                 ],
                 where: {
-                    ordered_at: {
-                        [Op.between]: [startDate.toISOString(), endDate.toISOString()],
-                    },
+                    [Op.and]: [
+                        Sequelize.where(dateTrunc, {
+                            [Op.between]: [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
+                        }),
+                    ],
                 },
                 group: ['day'],
                 order: [[Sequelize.literal('day'), 'ASC']],
@@ -252,6 +256,8 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
+    
+    
     
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {
