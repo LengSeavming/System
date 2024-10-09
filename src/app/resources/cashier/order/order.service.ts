@@ -5,6 +5,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Sequelize, Transaction } from 'sequelize';
 
 // =========================================================================>> Custom Library
+import { NotificationsGateway } from '@app/utils/notification-getway/notifications.gateway';
 import Notifications from '@models/notification/notification.model';
 import User from '@models/user/users.model';
 import { TelegramService } from 'src/app/services/telegram.service';
@@ -19,7 +20,9 @@ import { CreateOrderDto } from './order.pos.dto';
 @Injectable()
 export class OrderService {
 
-    constructor(private telegramService: TelegramService) { };
+    constructor(private telegramService: TelegramService,
+        private readonly notificationsGateway: NotificationsGateway,
+    ) { };
 
     async getProducts(): Promise<{ data: { id: number, name: string, products: Product[] }[] }> {
         const data = await ProductsType.findAll({
@@ -53,11 +56,11 @@ export class OrderService {
         // Initializing DB Connection
         const sequelize = new Sequelize(sequelizeConfig);
         let transaction: Transaction;
-    
+
         try {
             // Open DB Connection
             transaction = await sequelize.transaction();
-    
+
             // Create an order using method create()
             const order = await Order.create({
                 cashier_id: cashierId,
@@ -65,15 +68,15 @@ export class OrderService {
                 receipt_number: await this._generateReceiptNumber(),
                 ordered_at: null, // Will be updated later
             }, { transaction });
-    
+
             // Find Total Price & Order Details
             let totalPrice = 0;
             const cartItems = JSON.parse(body.cart); // Assuming cart is a JSON string
-    
+
             // Loop through cart items and calculate total price
             for (const [productId, qty] of Object.entries(cartItems)) {
                 const product = await Product.findByPk(parseInt(productId)); // Find product by its ID
-    
+
                 if (product) {
                     // Save to Order Details
                     await OrderDetails.create({
@@ -82,11 +85,11 @@ export class OrderService {
                         qty: Number(qty),
                         unit_price: product.unit_price,
                     }, { transaction });
-    
+
                     totalPrice += Number(qty) * product.unit_price; // Add to total price
                 }
             }
-    
+
             // Update Order with total price and ordered_at timestamp
             await Order.update({
                 total_price: totalPrice,
@@ -95,14 +98,14 @@ export class OrderService {
                 where: { id: order.id },
                 transaction,
             });
-    
+
             // Create notification for this order
             await Notifications.create({
                 order_id: order.id,
                 user_id: cashierId,
                 read: false,
             }, { transaction });
-    
+
             // Get order details for client response
             const data: Order = await Order.findByPk(order.id, {
                 attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
@@ -130,10 +133,10 @@ export class OrderService {
                 ],
                 transaction, // Ensure this is inside the same transaction
             });
-    
+
             // Commit transaction after successful operations
             await transaction.commit();
-    
+
             let htmlMessage = `<b>ការបញ្ជាទិញទទួលបានជោគជ័យ!</b>\n`;
             htmlMessage += `-លេខវិកយប័ត្រ ៖ ${data.receipt_number}\n`;
             htmlMessage += `-តម្លៃសរុប​​     ៖ ${data.total_price}\n`;
@@ -142,9 +145,34 @@ export class OrderService {
             // Send
             await this.telegramService.sendHTMLMessage(htmlMessage);
 
-    
+            const notifications = await Notifications.findAll({
+                attributes: ['id', 'read'],
+                include: [
+                    {
+                        model: Order,
+                        attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'avatar', 'name'],
+                    },
+                ]
+            });
+            const dataNotifications = notifications.map(notification => ({
+                id: notification.id,
+                receipt_number: notification.order.receipt_number,
+                total_price: notification.order.total_price,
+                ordered_at: notification.order.ordered_at,
+                cashier: {
+                    id: notification.user.id,
+                    name: notification.user.name,
+                    avatar: notification.user.avatar
+                },
+                read: notification.read
+            }));
+            this.notificationsGateway.sendOrderNotification({ data: dataNotifications });
             return { data, message: 'ការបញ្ជាទិញត្រូវបានបង្កើតដោយជោគជ័យ។' };
-    
+
         } catch (error) {
             if (transaction) {
                 await transaction.rollback(); // Rollback transaction on error
@@ -156,7 +184,7 @@ export class OrderService {
             await sequelize.close(); // Close sequelize connection
         }
     }
-    
+
 
     // Private method to generate a unique receipt number
     private async _generateReceiptNumber(): Promise<number> {
