@@ -81,10 +81,10 @@ export class DashboardService {
 
                     // Percentage change calculation between current and previous weeks
                     [Sequelize.literal(`(
-                        SELECT CASE
-                            WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100
-                            WHEN COALESCE(thisWeekSales.total, 0) = 0 THEN 0
-                            ELSE ((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) / GREATEST(lastWeekSales.total, 1)) * 100
+                       SELECT CASE
+                            WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100.00
+                            WHEN COALESCE(thisWeekSales.total, 0) = 0 THEN 0.00
+                            ELSE ROUND(CAST(((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) / GREATEST(lastWeekSales.total, 1)) * 100 AS NUMERIC), 2)
                         END AS percentageChange
                         FROM (
                             -- This week's total sales (conditionally apply date filter)
@@ -194,18 +194,18 @@ export class DashboardService {
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentWeek = this.getWeekNumber(currentDate);
-    
+
             // Use filters if provided, otherwise default to the current year and week
             const year = filters.year || currentYear;
             const week = filters.week || currentWeek;
-    
+
             // Get start and end date of the selected or current week
             const startDate = this.getStartDateOfISOWeek(week, year);
             const endDate = this.getEndDateOfISOWeek(week, year);
-    
+
             // Define an alias for the computed column
             const dateTrunc = Sequelize.fn('DATE', Sequelize.col('ordered_at'));
-    
+
             // Fetch total sales grouped by day of the week for the specified week
             const salesData = await Order.findAll({
                 attributes: [
@@ -222,43 +222,43 @@ export class DashboardService {
                 group: ['day'],
                 order: [[Sequelize.literal('day'), 'ASC']],
             });
-    
+
             // Initialize an array for Monday to Sunday, with default total_sales of 0
             const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const salesByDay = weekDays.map(day => ({ day, total_sales: 0 }));
-    
+
             // Map sales data to the corresponding days of the week
             salesData.forEach(sale => {
                 const saleDayValue = sale.get('day') as string;
-    
+
                 // Convert saleDayValue to Date
                 const saleDay = new Date(saleDayValue);
-    
+
                 if (!isNaN(saleDay.getTime())) {
                     const saleDayOfWeek = saleDay.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
                     const dayIndex = saleDayOfWeek === 0 ? 6 : saleDayOfWeek - 1; // Adjust index (Sunday -> 6, Monday -> 0)
-    
+
                     // Update the corresponding day with the total sales
                     salesByDay[dayIndex].total_sales = parseFloat(sale.get('total_sales').toString());
                 }
             });
-    
+
             // Extract labels (days of the week) and data (total sales)
             const result = {
                 labels: salesByDay.map(s => s.day),
                 data: salesByDay.map(s => s.total_sales),
             };
-    
+
             return result;
-    
+
         } catch (err) {
             console.error("Error fetching sales data:", err.message);
             throw new BadRequestException(err.message);
         }
     }
-    
-    
-    
+
+
+
     // Helper function to get the current week number
     private getWeekNumber(date: Date): number {
         const firstJan = new Date(date.getFullYear(), 0, 1);

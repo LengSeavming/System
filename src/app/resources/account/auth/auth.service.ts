@@ -83,7 +83,18 @@ export class AuthService {
             }
 
             if (userRole.is_default) {
+                const user = await User.findOne({
+                    where: {
+                        id: auth.id,
+                        is_active: ActiveEnum.ACTIVE
+                    },
+                    attributes: ['id', 'name', 'avatar', 'phone', 'email', 'password', 'created_at'
+                    ],
+                    include: [Role]
+                });
+                const token = this.tokenGenerator.getToken(user);
                 return {
+                    token: token,
                     message: 'This role is already set as default.',
                 };
             }
