@@ -3,8 +3,9 @@ import { InvoiceModule } from './invoice/invoice.module';
 
 // ===========================================================================>> Custom Library
 import { Routes } from '@nestjs/core';
-import { NotificationModule } from './notification/notification.module';
 import { NotificationGetwayModule } from './notification-getway/notifications.gateway.module';
+import { NotificationModule } from './notification/notification.module';
+import { ReportModule } from './report/report.module';
 
 export const utilsRoutes: Routes = [
     {
@@ -18,5 +19,9 @@ export const utilsRoutes: Routes = [
     {
         path: 'notifications-getway',
         module: NotificationGetwayModule
+    },
+    {
+        path: 'report',
+        module: ReportModule
     },
 ];

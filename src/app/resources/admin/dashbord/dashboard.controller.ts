@@ -12,7 +12,7 @@ export class DashboardController {
     ) { }
 
     @Get()
-    async getStaticDataDucument(
+    async getStaticData(
         @Query('today') today?: string,
         @Query('yesterday') yesterday?: string,
         @Query('thisWeek') thisWeek?: string,
@@ -20,7 +20,6 @@ export class DashboardController {
     ) {
         return await this._service.findStaticData({ today, yesterday, thisWeek, thisMonth });
     }
-
     @Get('/cashier')
     async getCashierAndTotalSale(
         @Query('year') year?: number,

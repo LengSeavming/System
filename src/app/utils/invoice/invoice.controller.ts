@@ -16,13 +16,4 @@ export class InvoiceController {
         }
         return this._service.generateReport(receiptNumber);
     }
-
-    @Get('report')
-    async generateReportInDay(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
-
-        if (!startDate || !endDate) {
-            throw new BadRequestException('Both startDate and endDate are required');
-        }
-        return this._service.generateReportBaseOnStartDateAndEndDate(startDate, endDate);
-    }
 }

@@ -2,10 +2,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 // ===========================================================================>> Third Party Library
-import { Op, Sequelize } from 'sequelize';
+import { col, fn, Op, Sequelize, where } from 'sequelize';
 
 // ===========================================================================>> Custom Library
 import { RoleEnum } from '@app/enums/role.enum';
+import { JsReportService } from '@app/services/js-report.service';
 import Order from '@models/order/order.model';
 import Product from '@models/product/product.model';
 import ProductsType from '@models/product/type.model';
@@ -15,6 +16,8 @@ import User from '@models/user/users.model';
 
 @Injectable()
 export class DashboardService {
+
+    constructor(private jsReportService: JsReportService) { }
 
     async findStaticData(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
         try {
@@ -30,14 +33,128 @@ export class DashboardService {
             const totalUser = await this.countUser(dataFilter);
             const totalOrder = await this.countOrder(dataFilter);
 
+            // Determine the date filters based on the provided filters
+            let currentPeriodFilter: any;
+            let previousPeriodFilter: any;
+
+            // Helper function to get a date string in 'YYYY-MM-DD' format
+            const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+            if (filters.yesterday) {
+                // If 'yesterday' filter is provided, sum data for that date
+                const yesterdayDate = new Date(filters.yesterday);
+
+                // Calculate the day before the provided 'yesterday' filter
+                const dayBeforeYesterday = new Date(yesterdayDate);
+                dayBeforeYesterday.setDate(yesterdayDate.getDate() - 1);
+
+                const yesterdayString = formatDate(yesterdayDate); // e.g., '2024-10-16'
+                const dayBeforeYesterdayString = formatDate(dayBeforeYesterday); // e.g., '2024-10-15'
+
+                // Set filters for the provided 'yesterday' and the day before
+                currentPeriodFilter = {
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, yesterdayString),
+                };
+
+                previousPeriodFilter = {
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, dayBeforeYesterdayString),
+                };
+            } else if (filters.today) {
+                const today = formatDate(new Date());
+
+                const yesterday = new Date();
+                yesterday.setDate(new Date().getDate() - 1);
+                const yesterdayString = formatDate(yesterday);
+
+                // Set filters for today and yesterday
+                currentPeriodFilter = {
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, today),
+                };
+
+                previousPeriodFilter = {
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, yesterdayString),
+                };
+            } else if (filters.thisWeek) {
+                const startOfThisWeek = this.getStartOfWeek(new Date());
+                const startOfLastWeek = this.getStartOfWeek(new Date(startOfThisWeek));
+                const endOfLastWeek = new Date(startOfThisWeek);
+                endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+
+                currentPeriodFilter = {
+                    ordered_at: {
+                        [Op.gte]: startOfThisWeek,
+                    },
+                };
+
+                previousPeriodFilter = {
+                    ordered_at: {
+                        [Op.gte]: startOfLastWeek,
+                        [Op.lte]: endOfLastWeek,
+                    },
+                };
+            } else if (filters.thisMonth) {
+                const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                const startOfLastMonth = new Date(startOfThisMonth);
+                startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+                const endOfLastMonth = new Date(startOfThisMonth);
+                endOfLastMonth.setDate(0);
+
+                currentPeriodFilter = {
+                    ordered_at: {
+                        [Op.gte]: startOfThisMonth,
+                    },
+                };
+
+                previousPeriodFilter = {
+                    ordered_at: {
+                        [Op.gte]: startOfLastMonth,
+                        [Op.lte]: endOfLastMonth,
+                    },
+                };
+            }
+
+            // Query to sum total sales for the current period
+            const totalSaleCurrent = await Order.sum('total_price', currentPeriodFilter) ?? 0;
+
+            // Query to sum total sales for the previous period
+            const totalSalePrevious = await Order.sum('total_price', previousPeriodFilter) ?? 0;
+
+            // Calculate the sale increase or decrease
+            const saleIncrease = totalSaleCurrent - totalSalePrevious;
+
+            // Format the sale difference with a sign
+            const saleDifferenceWithSign = saleIncrease >= 0
+                ? `+${saleIncrease}`
+                : `${saleIncrease}`;
+
+            // Calculate percentage increase or decrease, capped at -100% to +100%
+            let totalPercentageIncrease: number;
+
+            if (totalSaleCurrent === 0 && totalSalePrevious === 0) {
+                totalPercentageIncrease = 0; // No sales in both periods
+            } else {
+                // Calculate percentage change as (current - previous) / (current + previous) * 100
+                const percentageChange = ((totalSaleCurrent - totalSalePrevious) /
+                    (totalSaleCurrent + totalSalePrevious)) * 100;
+
+                // Cap the percentage change between -100.00% and +100.00%
+                totalPercentageIncrease = Math.max(-100, Math.min(percentageChange, 100));
+
+                // Format to two decimal places
+                totalPercentageIncrease = parseFloat(totalPercentageIncrease.toFixed(2));
+            }
             return {
                 statatics: {
                     totalProduct,
                     totalProductType,
                     totalUser,
-                    totalOrder
+                    totalOrder,
+                    total: totalSaleCurrent,
+                    totalPercentageIncrease,
+                    saleIncreasePreviousDay: saleDifferenceWithSign,
+
                 },
-                message: "ទទួលបានទិន្នន័យអង្គភាពដោយជោគជ័យ",
+                message: "ទទួលបានទិន្នន័យដោយជោគជ័យ",
             };
         } catch (err) {
             console.error("Error fetching static data:", err.message);
@@ -84,7 +201,12 @@ export class DashboardService {
                        SELECT CASE
                             WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100.00
                             WHEN COALESCE(thisWeekSales.total, 0) = 0 THEN 0.00
-                            ELSE ROUND(CAST(((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) / GREATEST(lastWeekSales.total, 1)) * 100 AS NUMERIC), 2)
+                            ELSE TRUNC(
+                            CAST(
+                                ((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) 
+                                / GREATEST(lastWeekSales.total, 1)) * 100 
+                            AS NUMERIC), 2
+                        )
                         END AS percentageChange
                         FROM (
                             -- This week's total sales (conditionally apply date filter)
@@ -133,7 +255,6 @@ export class DashboardService {
             throw new BadRequestException(err.message);
         }
     }
-
 
     async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {
         try {
@@ -286,6 +407,12 @@ export class DashboardService {
         const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 6); // Add 6 days to get the end of the week
         return endDate;
+    }
+
+    private getStartOfWeek(date: Date): Date {
+        const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for week starting on Monday
+        return new Date(date.setDate(diff));
     }
 
     // Helper method to construct date filter
