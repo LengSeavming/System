@@ -25,7 +25,7 @@ class Order extends Model<Order> {
 
     // ============================================================================================= One to Many
     @HasMany(() => OrderDetails)                                                                    details: OrderDetails[]
-    @HasMany(() => Notifications)                                                                    notifications: Notifications[];
+    @HasMany(() => Notifications)                                                                   notifications: Notifications[];
 }
 
 export default Order;

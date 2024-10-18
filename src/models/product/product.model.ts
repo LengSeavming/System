@@ -1,7 +1,8 @@
 // ================================================================================================= Third Party Library
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from 'sequelize-typescript';
 
 // ================================================================================================= Custom Library
+import OrderDetails from '@models/order/detail.model';
 import ProductsType from './type.model';
 
 @Table({ tableName: 'product', createdAt: 'created_at', updatedAt: 'updated_at' })
@@ -20,9 +21,12 @@ class Product extends Model<Product> {
     @Column({ allowNull: true, type: DataType.DOUBLE })                                             unit_price?: number;
 
     @Column({ allowNull: false, type: DataType.DECIMAL(10, 2), defaultValue: 0 })                   discount: number;
-
+    created_at: Date
     // ===========================================================================================>> Many to One
     @BelongsTo(() => ProductsType)                                                                  type: ProductsType;
+
+    // ===========================================================================================>> One to Many
+    @HasMany(() => OrderDetails)                                                     pod: OrderDetails[];
 }
 
 export default Product;

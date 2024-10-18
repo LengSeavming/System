@@ -39,7 +39,7 @@
         "pg": "^8.11.3",
         "readline-sync": "^1.4.10",
         "rxjs": "^7.8.1",
-        "sequelize": "^6.37.3",
+        "sequelize": "^6.37.4",
         "sequelize-typescript": "^2.1.6",
         "speakeasy": "^2.0.0"
     },

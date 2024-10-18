@@ -2,6 +2,7 @@
 import { BelongsTo, BelongsToMany, Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 
 // ================================================================================================= Custom Library
+import Order from '@models/order/order.model';
 import UserRoles from '@models/user/user_roles.model';
 import * as bcrypt from 'bcryptjs';
 import { ActiveEnum } from 'src/app/enums/active.enum';
@@ -33,6 +34,7 @@ class User extends Model<User> {
     created_at: Date
     // ===========================================================================================>> One to Many
     @HasMany(() => UserRoles)                                                                       role: UserRoles[];
+    @HasMany(() => Order)                                                                           orders: Order[];
 
     // ===========================================================================================>> Many to Many
     @BelongsToMany(() => Role, () => UserRoles)                                                     roles: Role[];
