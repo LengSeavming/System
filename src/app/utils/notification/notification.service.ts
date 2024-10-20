@@ -21,7 +21,8 @@ export class NotificationService {
                         model: User,
                         attributes: ['id', 'avatar', 'name'],
                     },
-                ]
+                ],
+                order: [['id', 'DESC']],
             });
 
             // Format the result to match the Notification interface

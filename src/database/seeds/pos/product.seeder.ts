@@ -35,9 +35,9 @@ export class ProductSeeder {
 // Mock data for products and product types
 const productSeederData = {
     types: [
-        { name: 'Beverage' },
-        { name: 'Alcohol' },
-        { name: 'Food-Meat' },
+        { name: 'Beverage', image: 'static/pos/products/type/glass-tulip.png' },
+        { name: 'Alcohol', image: 'static/pos/products/type/liquor.png' },
+        { name: 'Food-Meat', image: 'static/pos/products/type/food.png' },
     ],
     products: [
         {

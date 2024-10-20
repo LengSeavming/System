@@ -5,6 +5,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { UserMiddleware } from '@app/core/middlewares/user.middleware';
 import { OrderModule } from './order/order.module';
 import { SaleModule } from './sale/sale.module';
+import { DeviceTrackerMiddleware } from '@app/core/middlewares/device-tracker.middleware';
 
 @Module({
     imports: [
@@ -16,7 +17,7 @@ import { SaleModule } from './sale/sale.module';
 export class CashierModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
-            .apply(UserMiddleware)
+            .apply(UserMiddleware, DeviceTrackerMiddleware)
             .forRoutes({ path: 'api/cashier/*', method: RequestMethod.ALL });
     }
 }

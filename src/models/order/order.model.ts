@@ -19,6 +19,7 @@ class Order extends Model<Order> {
     @Column({ allowNull: false, unique: true, type: DataType.BIGINT })                              receipt_number: number;
     @Column({ allowNull: true, type: DataType.DOUBLE })                                             total_price?: number;
     @Column({ allowNull: true, type: DataType.DATE, defaultValue: new Date() })                     ordered_at?: Date;
+    @Column({ allowNull: true, type: DataType.STRING(20)})                                          platform: string;
     created_at: Date
     // ============================================================================================= Many to One
     @BelongsTo(() => User)                                                                          cashier: User;

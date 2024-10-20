@@ -30,7 +30,7 @@ export class SaleService {
             };
 
             const data = await Order.findAll({
-                attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
+                attributes: ['id', 'receipt_number', 'total_price','platform', 'ordered_at'],
                 include: [
                     {
                         model: OrderDetails,
@@ -85,7 +85,7 @@ export class SaleService {
     async view(id: number) {
         try {
             const data = await Order.findByPk(id,{
-                attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
+                attributes: ['id', 'receipt_number', 'total_price', 'platform', 'ordered_at'],
                 include: [
                     {
                         model: OrderDetails,
