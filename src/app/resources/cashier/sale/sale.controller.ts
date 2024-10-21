@@ -11,12 +11,20 @@ export class SaleController {
 
     constructor(private readonly _service: SaleService) { };
 
+    @Get('/setup')
+    async getUser(){
+        return await this._service.getUser();
+    }
+
     @Get()
     async getAllSale(
         @UserDecorator() auth: User,
         @Query('page_size') page_size?: number,
         @Query('page') page?: number,
         @Query('key') key?: string,
+        @Query('platform') platform?: string,
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string
     ) {
         if (!page_size) {
             page_size = 10;
@@ -25,7 +33,7 @@ export class SaleController {
             page = 1;
         }
 
-        return await this._service.listing(auth.id, page_size, page, key);
+        return await this._service.listing(auth.id, page_size, page, key, platform, startDate, endDate);
     }
     @Get(':id/view')
     async view(@Param('id') id: number

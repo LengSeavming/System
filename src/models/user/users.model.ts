@@ -3,6 +3,7 @@ import { BelongsTo, BelongsToMany, Column, DataType, HasMany, Model, Table } fro
 
 // ================================================================================================= Custom Library
 import Order from '@models/order/order.model';
+import Product from '@models/product/product.model';
 import UserRoles from '@models/user/user_roles.model';
 import * as bcrypt from 'bcryptjs';
 import { ActiveEnum } from 'src/app/enums/active.enum';
@@ -35,7 +36,7 @@ class User extends Model<User> {
     // ===========================================================================================>> One to Many
     @HasMany(() => UserRoles)                                                                       role: UserRoles[];
     @HasMany(() => Order)                                                                           orders: Order[];
-
+    @HasMany(() => Product)                                                                         create_pos: Product[];
     // ===========================================================================================>> Many to Many
     @BelongsToMany(() => Role, () => UserRoles)                                                     roles: Role[];
 }

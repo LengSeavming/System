@@ -45,126 +45,144 @@ const productSeederData = {
             type_id: 1,
             name: 'Logan Paul',
             unit_price: 3000,
-            image: 'static/pos/products/beverage/prime.png'
+            image: 'static/pos/products/beverage/prime.png',
+            creator_id: 1,
         },
         {
             code: 'B002',
             type_id: 1,
             name: 'Sting',
             unit_price: 5000,
-            image: 'static/pos/products/beverage/sting.png'
+            image: 'static/pos/products/beverage/sting.png',
+            creator_id: 1,
         },
         {
             code: 'B003',
             type_id: 1,
             name: 'Black Energy',
             unit_price: 2000,
-            image: 'static/pos/products/beverage/exspress.png'
+            image: 'static/pos/products/beverage/exspress.png',
+            creator_id: 1,
         },
         {
             code: 'B004',
             type_id: 1,
             name: 'Ize',
             unit_price: 4000,
-            image: 'static/pos/products/beverage/ize.png'
+            image: 'static/pos/products/beverage/ize.png',
+            creator_id: 1,
         },
         {
             code: 'B005',
             type_id: 1,
             name: 'IZE Cola',
             unit_price: 5000,
-            image: 'static/pos/products/beverage/IzeCola.png'
+            image: 'static/pos/products/beverage/IzeCola.png',
+            creator_id: 1,
         },
         {
             code: 'B006',
             type_id: 1,
             name: 'Red Bull',
             unit_price: 10000,
-            image: 'static/pos/products/beverage/redbullb.png'
+            image: 'static/pos/products/beverage/redbullb.png',
+            creator_id: 1,
         },
         {
             code: 'B007',
             type_id: 1,
             name: 'Red Bull Blue',
             unit_price: 1500,
-            image: 'static/pos/products/beverage/redbullblue.png'
+            image: 'static/pos/products/beverage/redbullblue.png',
+            creator_id: 1,
         },
         {
             code: 'B008',
             type_id: 1,
             name: 'Red Bull',
             unit_price: 12000,
-            image: 'static/pos/products/beverage/red.png'
+            image: 'static/pos/products/beverage/red.png',
+            creator_id: 1,
         },
         {
             code: 'B009',
             type_id: 1,
             name: 'Fanta',
             unit_price: 2000,
-            image: 'static/pos/products/beverage/Fanta-Orange-Soft-Drink.jpg'
+            image: 'static/pos/products/beverage/Fanta-Orange-Soft-Drink.jpg',
+            creator_id: 1,
         },
         {
             code: 'B0010',
             type_id: 1,
             name: 'Sprite',
             unit_price: 3000,
-            image: 'static/pos/products/beverage/sprite.png'
+            image: 'static/pos/products/beverage/sprite.png',
+            creator_id: 1,
         },
         {
             code: 'B0011',
             type_id: 1,
             name: 'PepSi',
             unit_price: 2500,
-            image: 'static/pos/products/beverage/pesi.png'
+            image: 'static/pos/products/beverage/pesi.png',
+            creator_id: 1,
         },
         {
             code: 'B0012',
             type_id: 1,
             name: 'CocaCola',
             unit_price: 2000,
-            image: 'static/pos/products/beverage/coca.png'
+            image: 'static/pos/products/beverage/coca.png',
+            creator_id: 1,
         },
         {
             code: 'A001',
             type_id: 2,
             name: 'ABC Red',
             unit_price: 5000,
-            image: 'static/pos/products/Alcohol/abcred.png'
+            image: 'static/pos/products/Alcohol/abcred.png',
+            creator_id: 1,
         },
         {
             code: 'A002',
             type_id: 2,
             name: 'ABA Black',
             unit_price: 5000,
-            image: 'static/pos/products/Alcohol/abc.png'
+            image: 'static/pos/products/Alcohol/abc.png',
+            creator_id: 1,
         },
         {
             code: 'A003',
             type_id: 2,
             name: 'Hanuman',
             unit_price: 4000,
-            image: 'static/pos/products/Alcohol/hured.png'
+            image: 'static/pos/products/Alcohol/hured.png',
+            creator_id: 1,
         },
         {
             code: 'A004',
             type_id: 2,
             name: 'Hanuman Black',
             unit_price: 8000,
-            image: 'static/pos/products/Alcohol/hunumanred.png'
+            image: 'static/pos/products/Alcohol/hunumanred.png',
+            creator_id: 1,
         },
         {
             code: 'A005',
             type_id: 2,
             name: 'Hanuman',
             unit_price: 4000,
-            image: 'static/pos/products/Alcohol/haa.png'
+            image: 'static/pos/products/Alcohol/haa.png',
+            creator_id: 1,
         },
         {
             code: 'F&M0010',
             type_id: 3,
             name: 'Pork',
             unit_price: 8000,
-            image: 'static/pos/products/Alcohol/meat.png'
+            image: 'static/pos/products/Alcohol/meat.png',
+            creator_id: 1,
         },
     ]
 };
