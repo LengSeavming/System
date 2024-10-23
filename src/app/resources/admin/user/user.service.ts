@@ -2,9 +2,13 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 
 // ===========================================================================>> Third Party Library
-import { Op } from "sequelize";
+import { literal, Op } from "sequelize";
 
 // ===========================================================================>> Custom Library
+import OrderDetails from "@models/order/detail.model";
+import Order from "@models/order/order.model";
+import Product from "@models/product/product.model";
+import ProductsType from "@models/product/type.model";
 import Role from "@models/user/role.model";
 import UserRoles from "@models/user/user_roles.model";
 import User from "@models/user/users.model";
@@ -24,8 +28,14 @@ export class UserService {
         return { roles: roles };
     }
 
-    async listing(userId: number, page_size: number = 10, page: number = 1, key?: string): Promise<List> {
+    async listing(
+        userId: number,
+        page_size: number = 10,
+        page: number = 1,
+        key?: string
+    ): Promise<List> {
         const offset = (page - 1) * page_size;
+
         const where = {
             [Op.and]: [
                 key
@@ -39,8 +49,32 @@ export class UserService {
                 { id: { [Op.not]: userId } },
             ],
         };
+
         const data = await User.findAll({
-            attributes: ['id', 'name', 'avatar', 'phone', 'email', 'is_active', 'created_at'],
+            attributes: [
+                'id', 'name', 'avatar', 'phone', 'email',
+                'is_active', 'last_login', 'created_at',
+                [
+                    literal(`
+                        (
+                            SELECT COUNT(o.id)
+                            FROM "order" AS o
+                            WHERE o.cashier_id = "User".id
+                        )
+                    `),
+                    'totalOrders',
+                ],
+                [
+                    literal(`
+                        (
+                            SELECT COALESCE(SUM(o.total_price), 0)
+                            FROM "order" AS o
+                            WHERE o.cashier_id = "User".id
+                        )
+                    `),
+                    'totalSales',
+                ],
+            ],
             include: [
                 {
                     model: UserRoles,
@@ -49,24 +83,30 @@ export class UserService {
                         {
                             model: Role,
                             attributes: ['id', 'name'],
-                        }
-                    ]
-                }
+                        },
+                    ],
+                },
+                {
+                    model: Order,
+                    attributes: [],
+                },
             ],
+            where,
             order: [['id', 'DESC']],
-            where: where,
             limit: page_size,
             offset,
+            // raw: true,
         });
-        const totalCount = await User.count();
+
+        const totalCount = await User.count({ where });
         const totalPages = Math.ceil(totalCount / page_size);
 
         const dataFormat: List = {
-            data: data,
+            data,
             pagination: {
                 currentPage: page,
                 perPage: page_size,
-                totalPages: totalPages,
+                totalPages,
                 totalItems: totalCount,
             },
         };
@@ -76,7 +116,30 @@ export class UserService {
 
     async view(userId: number) {
         const data = await User.findByPk(userId, {
-            attributes: ['id', 'name', 'avatar', 'phone', 'email', 'is_active', 'created_at'],
+            attributes: [
+                'id', 'name', 'avatar', 'phone', 'email',
+                'is_active', 'last_login', 'created_at',
+                [
+                    literal(`
+                        (
+                            SELECT COUNT(o.id)
+                            FROM "order" AS o
+                            WHERE o.cashier_id = "User".id
+                        )
+                    `),
+                    'totalOrders',
+                ],
+                [
+                    literal(`
+                        (
+                            SELECT COALESCE(SUM(o.total_price), 0)
+                            FROM "order" AS o
+                            WHERE o.cashier_id = "User".id
+                        )
+                    `),
+                    'totalSales',
+                ],
+            ],
             include: [
                 {
                     model: UserRoles,
@@ -85,12 +148,41 @@ export class UserService {
                         {
                             model: Role,
                             attributes: ['id', 'name'],
-                        }
-                    ]
-                }
+                        },
+                    ],
+                },
+                {
+                    model: Order,
+                    attributes: [],
+                },
             ],
         });
-        return { data: data };
+
+        const where: any = {
+            cashier_id: userId,
+        };
+
+        const sale = await Order.findAll({
+            attributes: ['id', 'receipt_number', 'total_price', 'platform', 'ordered_at'],
+            include: [
+                {
+                    model: OrderDetails,
+                    attributes: ['id', 'unit_price', 'qty'],
+                    include: [
+                        {
+                            model: Product,
+                            attributes: ['id', 'name', 'code', 'image'],
+                            include: [{ model: ProductsType, attributes: ['name'] }],
+                        },
+                    ],
+                },
+                { model: User, attributes: ['id', 'avatar', 'name'] },
+            ],
+            where: where,
+            order: [['ordered_at', 'DESC']],
+            limit: 10,
+        });
+        return { data: data, sale: sale };
     }
 
     async create(body: CreateUserDto, userId: number): Promise<Create> {
@@ -108,12 +200,12 @@ export class UserService {
         } catch (error) {
             throw new BadRequestException('Something went wrong. Please try again later.', 'Error Query');
         }
-    
+
         // If user already exists, throw an error
         if (user) {
             throw new BadRequestException('Email or phone already exists!');
         }
-    
+
         // Upload the avatar image to the file service
         const result = await this.fileService.uploadBase64Image('user', body.avatar);
         if (result.error) {
@@ -121,7 +213,7 @@ export class UserService {
         }
         // Set the avatar to the file URI returned from the file service
         body.avatar = result.file.uri;
-    
+
         let createdUser;
         // Create the new user in the database
         try {
@@ -137,7 +229,7 @@ export class UserService {
             console.error('Error creating user:', err); // Log the error
             throw new BadRequestException('Failed to create user');
         }
-    
+
         // Assign roles to the user by creating entries in the UserRoles table
         if (body.role_ids && body.role_ids.length > 0) {
             const userRoles = body.role_ids.map((roleId, index) => ({
@@ -147,10 +239,10 @@ export class UserService {
                 created_at: new Date(),
                 is_default: index === 0 // Set is_default to true only for the first role
             }));
-    
+
             await UserRoles.bulkCreate(userRoles);
         }
-    
+
         // Fetch the created user data including the roles for response
         const data = await User.findByPk(createdUser.id, {
             attributes: ['id', 'name', 'avatar', 'phone', 'email', 'is_active', 'created_at'],
@@ -167,16 +259,16 @@ export class UserService {
                 }
             ],
         });
-    
+
         // Format the response
         const dataFormat: Create = {
             data: data,
             message: "User has been created"
         };
-    
+
         return dataFormat;
     }
-    
+
     private isValidBase64(str: string): boolean {
         const base64Pattern = /^data:image\/(jpeg|png|gif|bmp|webp);base64,[a-zA-Z0-9+/]+={0,2}$/;
         return base64Pattern.test(str);

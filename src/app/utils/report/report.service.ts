@@ -25,15 +25,17 @@ export class ReportService {
         endDate: string,
         userId: number
     ) {
+        const { start, end } = this.getStartAndEndDateInCambodia(
+            startDate || this.getCurrentDate(),
+            endDate || this.getCurrentDate()
+        );
         const user = await this.fetchUser(userId);
-        const orders = await this.fetchOrders(startDate, endDate);
-
-        if (!orders.length) return { data: [], SumTotalPrice: 0 };
+        const orders = await this.fetchOrders(start, end);
 
         const sumTotalPrice = this.calculateTotal(orders, 'total_price');
         const formattedOrders = this.formatOrderData(orders);
 
-        const reportData = this.buildReportData(user, sumTotalPrice, formattedOrders, startDate, endDate);
+        const reportData = this.buildReportData(user, sumTotalPrice, formattedOrders, start, end);
 
         return this.generateAndSendReport(reportData, process.env.JS_TEMPLATE_POS, 'Sale Report', 'របាយការណ៍លក់រាយ');
     }
@@ -43,13 +45,17 @@ export class ReportService {
         endDate: string,
         userId: number
     ) {
+        const { start, end } = this.getStartAndEndDateInCambodia(
+            startDate || this.getCurrentDate(),
+            endDate || this.getCurrentDate()
+        );
         const user = await this.fetchUser(userId);
-        const cashiers = await this.fetchCashierSales(startDate, endDate);
+        const cashiers = await this.fetchCashierSales(start, end);
 
         const totalOrders = this.calculateTotal(cashiers, 'totalOrders');
         const totalSales = this.calculateTotal(cashiers, 'totalSales');
 
-        const reportData = this.buildReportData(user, totalSales, cashiers, startDate, endDate, totalOrders);
+        const reportData = this.buildReportData(user, totalSales, cashiers, start, end, totalOrders);
 
         return this.generateAndSendReport(reportData, process.env.JS_TEMPLATE_CASHIER, 'Cashier Sales Report', 'របាយការណ៍លក់តាមអ្នកគិតប្រាក់');
     }
@@ -59,14 +65,18 @@ export class ReportService {
         endDate: string,
         userId: number
     ) {
+        const { start, end } = this.getStartAndEndDateInCambodia(
+            startDate || this.getCurrentDate(),
+            endDate || this.getCurrentDate()
+        );
         const user = await this.fetchUser(userId);
-        const products = await this.fetchProducts(startDate, endDate);
+        const products = await this.fetchProducts(start, end);
 
         const productData = this.processProductData(products);
         const totalSales = this.calculateTotal(productData, 'total_sales');
         const totalQty = this.calculateTotal(productData, 'total_qty');
 
-        const reportData = this.buildReportData(user, totalSales, productData, startDate, endDate, totalQty);
+        const reportData = this.buildReportData(user, totalSales, productData, start, end, totalQty);
 
         return this.generateAndSendReport(reportData, process.env.JS_TEMPLATE_PRODUCT, 'Product Sales Report', 'របាយការណ៍លក់តាមផលិតផល');
     }
@@ -79,7 +89,7 @@ export class ReportService {
         return user;
     }
 
-    private async fetchOrders(startDate: string, endDate: string) {
+    private async fetchOrders(startDate: Date, endDate: Date) {
         return Order.findAll({
             where: { ordered_at: { [Op.between]: [startDate, endDate] } },
             attributes: ['id', 'receipt_number', 'total_price', 'ordered_at'],
@@ -91,7 +101,7 @@ export class ReportService {
         });
     }
 
-    private async fetchCashierSales(startDate: string, endDate: string) {
+    private async fetchCashierSales(startDate: Date, endDate: Date) {
         return User.findAll({
             attributes: [
                 'id', 'name', 'phone',
@@ -106,7 +116,7 @@ export class ReportService {
         });
     }
 
-    private async fetchProducts(startDate: string, endDate: string) {
+    private async fetchProducts(startDate: Date, endDate: Date) {
         return Product.findAll({
             attributes: ['id', 'name', 'unit_price'],
             include: [
@@ -154,14 +164,14 @@ export class ReportService {
         }));
     }
 
-    private buildReportData(user: User, totalSales: number, data: any[], startDate: string, endDate: string, totalQty = 0) {
-        const now = new Date();
-        const dateString = now.toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh', hour12: true });
+    private buildReportData(user: User, totalSales: number, data: any[], startDate: Date, endDate: Date, totalQty = 0) {
+        const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh', hour12: true });
 
         return {
-            currentDate: dateString.split(',')[0],
-            currentTime: dateString.split(',')[1].trim(),
-            startDate, endDate,
+            currentDate: now.split(',')[0],
+            currentTime: now.split(',')[1].trim(),
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
             name: user.name,
             SumTotalPrice: totalSales,
             SumTotalSale: totalQty,
@@ -169,66 +179,52 @@ export class ReportService {
         };
     }
 
+    private getCurrentDate(): string {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; // Returns 'YYYY-MM-DD'
+    }
+
+    // Helper to calculate start and end dates for Cambodia timezone (UTC+7)
+    private getStartAndEndDateInCambodia(startDate: string, endDate: string) {
+        const start = new Date(`${startDate}T00:00:00`);
+        const end = new Date(`${endDate}T23:59:59`);
+
+        // Adjust for UTC+7 (Cambodia time)
+        start.setHours(start.getHours() - start.getTimezoneOffset() / 60 + 7);
+        end.setHours(end.getHours() - end.getTimezoneOffset() / 60 + 7);
+
+        return { start, end };
+    }
+
+
+
     private async generateAndSendReport(
         reportData: any,
         template: string,
         fileName: string,
         content: string,
-        timeout: number = 30 * 1000 // Default timeout of 30 seconds
+        timeout: number = 30 * 1000
     ) {
         try {
-            // Start the report generation with timeout handling
-            const result = await this.withTimeout(
-                this.jsReportService.generateReport(template, reportData),
-                timeout
-            );
-    
-            // Check if the report generation failed
-            if (result.error) {
-                console.error('Report generation failed:', result.error);
-                throw new BadRequestException('Report generation failed. Please try again.');
-            }
-    
-            // Convert the report data from Base64 to a buffer
-            const reportBuffer = Buffer.from(result.data, 'base64');
-            // await this.waitFor(1 * 60 * 1000);
-            // // Send the report to Telegram only if report generation was successful
-            // await this.telegramService.sendDocument(reportBuffer, fileName, content);
+            const result = await this.withTimeout(this.jsReportService.generateReport(template, reportData), timeout);
+            if (result.error) throw new BadRequestException('Report generation failed.');
 
-            // Return the result of the report generation
             return result;
         } catch (error) {
-            // Handle timeout separately
             if (error instanceof RequestTimeoutException) {
-                console.error('Report generation timed out:', error.message);
                 throw new RequestTimeoutException('Request Timeout: Report generation took too long.');
             }
-    
-            console.error('Error generating or sending report:', error);
             throw new BadRequestException(error.message || 'Failed to generate and send the report.');
         }
     }
 
-    private waitFor(ms: number): Promise<void> {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-    // Helper method to implement timeout logic
     private withTimeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
         return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                reject(new RequestTimeoutException('Request Timeout: Operation took too long.'));
-            }, timeout);
-    
-            promise
-                .then((result) => {
-                    clearTimeout(timer);
-                    resolve(result);
-                })
-                .catch((error) => {
-                    clearTimeout(timer);
-                    reject(error);
-                });
+            const timer = setTimeout(() => reject(new RequestTimeoutException('Request Timeout: Operation took too long.')), timeout);
+            promise.then(resolve).catch(reject).finally(() => clearTimeout(timer));
         });
     }
-    
 }

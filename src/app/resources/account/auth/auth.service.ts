@@ -12,6 +12,7 @@ import User from '@models/user/users.model';
 
 import { JwtTokenGenerator, TokenGenerator } from '@app/shared/jwt/token';
 import UserRoles from '@models/user/user_roles.model';
+import UsersLogs from '@models/user/users_logs.model';
 import { ActiveEnum } from 'src/app/enums/active.enum';
 
 interface LoginPayload {
@@ -27,7 +28,7 @@ export class AuthService {
         this.tokenGenerator = new JwtTokenGenerator();
     }
 
-    async login(body: LoginPayload) {
+    async login(body: LoginPayload, req: Request) {
         let user: User;
         try {
             user = await User.findOne({
@@ -61,7 +62,22 @@ export class AuthService {
             throw new BadRequestException('Invalid password', 'Password Error');
         }
         const token = this.tokenGenerator.getToken(user);
+        user.last_login = new Date();
+        await user.save();
 
+        const deviceInfo = req['deviceInfo'];
+
+        // Store the login log in users_logs table
+        await UsersLogs.create({
+            user_id: user.id,
+            action: 'login',
+            details: 'User logged into the system',
+            ip_address: deviceInfo.ip,
+            browser: deviceInfo.browser,
+            os: deviceInfo.os,
+            platform: deviceInfo.platform,
+            timestamp: deviceInfo.timestamp,
+        });
         // ===>> Prepare Response
         return {
             token: token,

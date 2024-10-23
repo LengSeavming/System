@@ -1,5 +1,5 @@
 // ===========================================================================>> Core Library
-import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UsePipes } from '@nestjs/common';
 
 // ===========================================================================>> Costom Library
 import UserDecorator from '@app/core/decorators/user.decorator';
@@ -15,8 +15,8 @@ export class AuthController {
 
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    async login(@Body() data: LoginRequestDto) {
-        return await this.authService.login(data);
+    async login(@Body() data: LoginRequestDto, @Req() req: Request) {
+        return await this.authService.login(data, req);
     }
 
     @Post('switch')

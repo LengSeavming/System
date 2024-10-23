@@ -7,10 +7,12 @@ import * as useragent from 'useragent';
 @Injectable()
 export class DeviceTrackerMiddleware implements NestMiddleware {
     use(req: Request, res: Response, next: NextFunction) {
-        
-        // Get IP address
-        const ip = requestIp.getClientIp(req);
 
+        // Get IP address
+        let ip = requestIp.getClientIp(req);
+        if (ip === '::1') {
+            ip = '127.0.0.1';
+        }
         // Parse User-Agent string
         const agent = useragent.parse(req.headers['user-agent']);
         const isMobile = req.headers['x-flutter'] === 'true';

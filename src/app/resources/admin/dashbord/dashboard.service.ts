@@ -19,60 +19,45 @@ export class DashboardService {
 
     constructor(private jsReportService: JsReportService) { }
 
-    async findStaticData(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
+    async findStaticData(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string } = {}): Promise<any> {
         try {
+
             const dateFilter = this.getDateFilter(filters);
 
             // Build the document filter, including the date filter only if it's not empty
-            const dataFilter: any = {
-                ...dateFilter
-            };
+            const dataFilter: any = { ...dateFilter };
 
             const totalProduct = await this.countProduct(dataFilter);
             const totalProductType = await this.countProductType(dataFilter);
             const totalUser = await this.countUser(dataFilter);
             const totalOrder = await this.countOrder(dataFilter);
 
-            // Determine the date filters based on the provided filters
             let currentPeriodFilter: any;
             let previousPeriodFilter: any;
 
-            // Helper function to get a date string in 'YYYY-MM-DD' format
             const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
             if (filters.yesterday) {
-                // If 'yesterday' filter is provided, sum data for that date
                 const yesterdayDate = new Date(filters.yesterday);
-
-                // Calculate the day before the provided 'yesterday' filter
                 const dayBeforeYesterday = new Date(yesterdayDate);
                 dayBeforeYesterday.setDate(yesterdayDate.getDate() - 1);
 
-                const yesterdayString = formatDate(yesterdayDate); // e.g., '2024-10-16'
-                const dayBeforeYesterdayString = formatDate(dayBeforeYesterday); // e.g., '2024-10-15'
-
-                // Set filters for the provided 'yesterday' and the day before
                 currentPeriodFilter = {
-                    where: where(fn('DATE', col('ordered_at')), Op.eq, yesterdayString),
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, formatDate(yesterdayDate)),
                 };
-
                 previousPeriodFilter = {
-                    where: where(fn('DATE', col('ordered_at')), Op.eq, dayBeforeYesterdayString),
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, formatDate(dayBeforeYesterday)),
                 };
             } else if (filters.today) {
                 const today = formatDate(new Date());
-
                 const yesterday = new Date();
                 yesterday.setDate(new Date().getDate() - 1);
-                const yesterdayString = formatDate(yesterday);
 
-                // Set filters for today and yesterday
                 currentPeriodFilter = {
                     where: where(fn('DATE', col('ordered_at')), Op.eq, today),
                 };
-
                 previousPeriodFilter = {
-                    where: where(fn('DATE', col('ordered_at')), Op.eq, yesterdayString),
+                    where: where(fn('DATE', col('ordered_at')), Op.eq, formatDate(yesterday)),
                 };
             } else if (filters.thisWeek) {
                 const startOfThisWeek = this.getStartOfWeek(new Date());
@@ -81,16 +66,10 @@ export class DashboardService {
                 endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
 
                 currentPeriodFilter = {
-                    ordered_at: {
-                        [Op.gte]: startOfThisWeek,
-                    },
+                    ordered_at: { [Op.gte]: startOfThisWeek },
                 };
-
                 previousPeriodFilter = {
-                    ordered_at: {
-                        [Op.gte]: startOfLastWeek,
-                        [Op.lte]: endOfLastWeek,
-                    },
+                    ordered_at: { [Op.gte]: startOfLastWeek, [Op.lte]: endOfLastWeek },
                 };
             } else if (filters.thisMonth) {
                 const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -100,49 +79,28 @@ export class DashboardService {
                 endOfLastMonth.setDate(0);
 
                 currentPeriodFilter = {
-                    ordered_at: {
-                        [Op.gte]: startOfThisMonth,
-                    },
+                    ordered_at: { [Op.gte]: startOfThisMonth },
                 };
-
                 previousPeriodFilter = {
-                    ordered_at: {
-                        [Op.gte]: startOfLastMonth,
-                        [Op.lte]: endOfLastMonth,
-                    },
+                    ordered_at: { [Op.gte]: startOfLastMonth, [Op.lte]: endOfLastMonth },
                 };
             }
 
-            // Query to sum total sales for the current period
             const totalSaleCurrent = await Order.sum('total_price', currentPeriodFilter) ?? 0;
-
-            // Query to sum total sales for the previous period
             const totalSalePrevious = await Order.sum('total_price', previousPeriodFilter) ?? 0;
-
-            // Calculate the sale increase or decrease
             const saleIncrease = totalSaleCurrent - totalSalePrevious;
+            const saleDifferenceWithSign = saleIncrease >= 0 ? `+${saleIncrease}` : `${saleIncrease}`;
 
-            // Format the sale difference with a sign
-            const saleDifferenceWithSign = saleIncrease >= 0
-                ? `+${saleIncrease}`
-                : `${saleIncrease}`;
-
-            // Calculate percentage increase or decrease, capped at -100% to +100%
             let totalPercentageIncrease: number;
-
             if (totalSaleCurrent === 0 && totalSalePrevious === 0) {
-                totalPercentageIncrease = 0; // No sales in both periods
+                totalPercentageIncrease = 0;
             } else {
-                // Calculate percentage change as (current - previous) / (current + previous) * 100
                 const percentageChange = ((totalSaleCurrent - totalSalePrevious) /
                     (totalSaleCurrent + totalSalePrevious)) * 100;
-
-                // Cap the percentage change between -100.00% and +100.00%
                 totalPercentageIncrease = Math.max(-100, Math.min(percentageChange, 100));
-
-                // Format to two decimal places
                 totalPercentageIncrease = parseFloat(totalPercentageIncrease.toFixed(2));
             }
+
             return {
                 statatics: {
                     totalProduct,
@@ -152,7 +110,6 @@ export class DashboardService {
                     total: totalSaleCurrent,
                     totalPercentageIncrease,
                     saleIncreasePreviousDay: saleDifferenceWithSign,
-
                 },
                 message: "ទទួលបានទិន្នន័យដោយជោគជ័យ",
             };
@@ -457,40 +414,39 @@ export class DashboardService {
         return new Date(date.setHours(23, 59, 59, 999));
     }
 
-    // Helper method to get start of the week
     private startOfWeek(date: Date): Date {
-        const day = date.getDay();
+        const day = date.getDay(); // Get the current day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
         const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust if Sunday is the start of the week
-        return this.startOfDay(new Date(date.setDate(diff)));
+        return this.startOfDay(new Date(date.setDate(diff))); // Set the correct date and time to 00:00:00
     }
 
-    // Helper method to get start of the month
     private startOfMonth(date: Date): Date {
-        return this.startOfDay(new Date(date.getFullYear(), date.getMonth(), 1));
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1); // First day of the month
+        return this.startOfDay(startOfMonth); // Ensure the time is set to 00:00:00
     }
 
     // Count documents based on the filter
     private async countProduct(filter: any): Promise<number> {
         return Product.count({
-            where: filter
+            // where: filter
         });
     }
 
     private async countProductType(filter: any): Promise<number> {
         return ProductsType.count({
-            where: filter
+            // where: filter
         });
     }
 
     private async countUser(filter: any): Promise<number> {
         return User.count({
-            where: filter
+            // where: filter
         });
     }
 
     private async countOrder(filter: any): Promise<number> {
         return Order.count({
-            where: filter
+            // where: filter
         });
     }
 
