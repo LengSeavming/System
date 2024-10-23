@@ -52,7 +52,7 @@ export class OrderService {
     }
 
     // Method for creating an order
-    async makeOrder(cashierId: number, body: CreateOrderDto, platform: string): Promise<{ data: Order, message: string }> {
+    async makeOrder(cashierId: number, body: CreateOrderDto): Promise<{ data: Order, message: string }> {
         // Initializing DB Connection
         const sequelize = new Sequelize(sequelizeConfig);
         let transaction: Transaction;
@@ -64,7 +64,7 @@ export class OrderService {
             // Create an order using method create()
             const order = await Order.create({
                 cashier_id: cashierId,
-                platform: platform,
+                platform: body.platform,
                 total_price: 0, // Initialize with 0, will update later
                 receipt_number: await this._generateReceiptNumber(),
                 ordered_at: null, // Will be updated later

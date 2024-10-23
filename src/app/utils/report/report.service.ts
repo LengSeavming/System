@@ -211,7 +211,6 @@ export class ReportService {
         try {
             const result = await this.withTimeout(this.jsReportService.generateReport(template, reportData), timeout);
             if (result.error) throw new BadRequestException('Report generation failed.');
-
             return result;
         } catch (error) {
             if (error instanceof RequestTimeoutException) {

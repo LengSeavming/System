@@ -18,6 +18,7 @@ import { ActiveEnum } from 'src/app/enums/active.enum';
 interface LoginPayload {
     username: string
     password: string
+    platform: string
 }
 
 @Injectable()
@@ -75,7 +76,7 @@ export class AuthService {
             ip_address: deviceInfo.ip,
             browser: deviceInfo.browser,
             os: deviceInfo.os,
-            platform: deviceInfo.platform,
+            platform: body.platform || 'Web',
             timestamp: deviceInfo.timestamp,
         });
         // ===>> Prepare Response

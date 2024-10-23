@@ -5,6 +5,9 @@ export class CreateOrderDto {
     @IsNotEmpty()
     @IsJSON()
     cart: string
+    
+    @IsNotEmpty()
+    platform: string
 }
 
 export interface ProductWithType extends Omit<Product, 'type'> {
