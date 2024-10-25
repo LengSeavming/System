@@ -48,3 +48,17 @@ export class LoginRequestDto {
     @IsNotEmpty({ message: "Filed platform is required Mobile or Web" })
     platform: string;
 }
+export class LoginRequestOTPDto {
+
+    @IsString()
+    @IsNotEmpty({ message: "Filed username is required" })
+    username: string;
+
+    @IsString()
+    @IsNotEmpty({ message: "Filed opt is required" })
+    otp: string;
+
+    @IsString()
+    @IsNotEmpty({ message: "Filed platform is required Mobile or Web" })
+    platform: string;
+}

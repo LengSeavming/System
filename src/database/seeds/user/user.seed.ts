@@ -54,7 +54,7 @@ const data = {
         {
             name: 'ចាន់​ សុវ៉ាន់ណេត',
             phone: '0889566929',
-            email: 'suvannetchan@gmail.com',
+            email: 'chansuvannet999@gmail.com',
             password: '123456',
             avatar: 'static/pos/user/avatar.png',
             creator_id: 1,

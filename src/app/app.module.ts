@@ -30,7 +30,7 @@ import { UtilsModule } from './utils/utils.module';
         CashierModule,
         //===================== Share Utils
         UtilsModule,
-        
+
         //===================== END OF ROLE USER
         RouterModule.register(appRoutes),
     ],
@@ -50,12 +50,8 @@ export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
         consumer.apply(JwtMiddleware)
             .exclude(
-                {
-                    path: '', method: RequestMethod.GET
-                },
-                {
-                    path: 'api/account/auth/login', method: RequestMethod.POST
-                },
+                { path: '', method: RequestMethod.GET },
+                { path: 'api/account/auth/(.*)', method: RequestMethod.POST }
             ).forRoutes({ path: '*', method: RequestMethod.ALL });
     }
 }

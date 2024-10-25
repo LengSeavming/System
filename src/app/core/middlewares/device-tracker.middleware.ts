@@ -41,8 +41,6 @@ export class DeviceTrackerMiddleware implements NestMiddleware {
       timestamp: new Date(),
     };
 
-    console.log('Device Info:', deviceInfo); // Optional: log for debugging
-
     // Attach deviceInfo to request object for further processing
     req['deviceInfo'] = deviceInfo;
 

@@ -8,6 +8,7 @@ import UserRoles from '@models/user/user_roles.model';
 import * as bcrypt from 'bcryptjs';
 import { ActiveEnum } from 'src/app/enums/active.enum';
 import Role from './role.model';
+import UserOTP from './user_otps.model';
 @Table({ tableName: 'users', createdAt: 'created_at', updatedAt: 'updated_at', deletedAt: 'deleted_at', paranoid: true })
 class User extends Model<User> {
 
@@ -38,6 +39,7 @@ class User extends Model<User> {
     @HasMany(() => UserRoles)                                                                       role: UserRoles[];
     @HasMany(() => Order)                                                                           orders: Order[];
     @HasMany(() => Product)                                                                         create_pos: Product[];
+    @HasMany(() => UserOTP)                                                                         otps: UserOTP[];
     // ===========================================================================================>> Many to Many
     @BelongsToMany(() => Role, () => UserRoles)                                                     roles: Role[];
 }
