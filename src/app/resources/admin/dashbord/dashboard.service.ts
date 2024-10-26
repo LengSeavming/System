@@ -119,66 +119,48 @@ export class DashboardService {
         }
     }
 
-    async findCashierAndTotalSale(filters: { year?: number; week?: number }) {
+    async findCashierAndTotalSale(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string } = {}) {
         try {
-            // Calculate the current week and year if no filter is provided
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentWeek = this.getWeekNumber(currentDate); // Helper method to get the week number
-
-            // Set year and week based on filters, defaulting to current year/week if not provided
-            const year = filters.year || currentYear;
-            const week = filters.week || currentWeek;
-
-            let startDate, endDate;
-            let dateCondition = '';
-
-            // If year and week are provided, calculate the start and end dates for the specified week
-            if (filters.year && filters.week) {
-                startDate = this.getStartDateOfISOWeek(week, year); // Helper method for start of week
-                endDate = this.getEndDateOfISOWeek(week, year); // Helper method for end of week
-                dateCondition = `AND o.ordered_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'`;
-            }
+            const { currentPeriodFilter, previousPeriodFilter } = this.getDateFilters(filters);
 
             const cashiers = await User.findAll({
                 attributes: [
                     'id',
                     'name',
                     'avatar',
-                    // Total sales amount calculation (with or without date filtering)
+
+                    // Total sales for the current period
                     [Sequelize.literal(`(
                         SELECT COALESCE(SUM(o.total_price), 0)
                         FROM "order" AS o
                         WHERE o.cashier_id = "User".id
-                        ${dateCondition}
+                        AND ${currentPeriodFilter}
                     )`), 'totalAmount'],
 
-                    // Percentage change calculation between current and previous weeks
+                    // Percentage change between today and yesterday (or current and previous period)
                     [Sequelize.literal(`(
-                       SELECT CASE
-                            WHEN COALESCE(lastWeekSales.total, 0) = 0 AND COALESCE(thisWeekSales.total, 0) > 0 THEN 100.00
-                            WHEN COALESCE(thisWeekSales.total, 0) = 0 THEN 0.00
+                        SELECT CASE
+                            WHEN COALESCE(yesterdaySales.total, 0) = 0 AND COALESCE(todaySales.total, 0) > 0 THEN 100.00
+                            WHEN COALESCE(todaySales.total, 0) = 0 THEN 0.00
                             ELSE TRUNC(
-                            CAST(
-                                ((COALESCE(thisWeekSales.total, 0) - COALESCE(lastWeekSales.total, 0)) 
-                                / GREATEST(lastWeekSales.total, 1)) * 100 
-                            AS NUMERIC), 2
-                        )
+                                CAST(
+                                    ((COALESCE(todaySales.total, 0) - COALESCE(yesterdaySales.total, 0)) 
+                                    / GREATEST(yesterdaySales.total, 1)) * 100 
+                                AS NUMERIC), 2
+                            )
                         END AS percentageChange
                         FROM (
-                            -- This week's total sales (conditionally apply date filter)
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
-                            ${dateCondition}
-                        ) AS thisWeekSales,
+                            AND ${currentPeriodFilter}
+                        ) AS todaySales,
                         (
-                            -- Last week's total sales for comparison
                             SELECT SUM(o.total_price) AS total
                             FROM "order" AS o
                             WHERE o.cashier_id = "User".id
-                            AND o.ordered_at BETWEEN '${this.getStartDateOfISOWeek(week - 1, year).toISOString()}' AND '${this.getEndDateOfISOWeek(week - 1, year).toISOString()}'
-                        ) AS lastWeekSales
+                            AND ${previousPeriodFilter}
+                        ) AS yesterdaySales
                     )`), 'percentageChange'],
                 ],
                 include: [
@@ -186,31 +168,71 @@ export class DashboardService {
                         model: UserRoles,
                         where: { role_id: RoleEnum.CASHIER },
                         attributes: ['id', 'role_id'],
-                        include: [
-                            {
-                                model: Role,
-                                attributes: ['id', 'name'],
-                            },
-                        ],
+                        include: [{ model: Role, attributes: ['id', 'name'] }],
                     },
                 ],
-                // Order by total sales in descending order
-                order: [
-                    [Sequelize.literal('"totalAmount"'), 'DESC'],
-                ],
+                order: [[Sequelize.literal('"totalAmount"'), 'DESC']],
             });
 
             if (cashiers.length === 0) {
-                console.log("No cashier data found for the specified week.");
+                console.log("No cashier data found for the specified filters.");
             }
 
-            return {
-                data: cashiers,
-            };
+            return { data: cashiers };
         } catch (err) {
             console.error("Error fetching cashier data:", err.message);
             throw new BadRequestException(err.message);
         }
+    }
+
+    private getDateFilters(filters: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }) {
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+        let currentPeriodFilter: string;
+        let previousPeriodFilter: string;
+
+        if (filters.yesterday) {
+            const yesterday = new Date(filters.yesterday);
+            const dayBeforeYesterday = new Date(yesterday);
+            dayBeforeYesterday.setDate(yesterday.getDate() - 1);
+
+            currentPeriodFilter = `o.ordered_at::date = '${formatDate(yesterday)}'`;
+            previousPeriodFilter = `o.ordered_at::date = '${formatDate(dayBeforeYesterday)}'`;
+        } else if (filters.today) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            currentPeriodFilter = `o.ordered_at::date = '${formatDate(today)}'`;
+            previousPeriodFilter = `o.ordered_at::date = '${formatDate(yesterday)}'`;
+        } else if (filters.thisWeek) {
+            const startOfThisWeek = this.startOfWeek(new Date());
+            const startOfLastWeek = this.startOfWeek(new Date(startOfThisWeek));
+            const endOfLastWeek = new Date(startOfThisWeek);
+            endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+
+            currentPeriodFilter = `o.ordered_at >= '${startOfThisWeek.toISOString()}'`;
+            previousPeriodFilter = `o.ordered_at BETWEEN '${startOfLastWeek.toISOString()}' AND '${endOfLastWeek.toISOString()}'`;
+        } else if (filters.thisMonth) {
+            const startOfThisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const startOfLastMonth = new Date(startOfThisMonth);
+            startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+            const endOfLastMonth = new Date(startOfThisMonth);
+            endOfLastMonth.setDate(0);
+
+            currentPeriodFilter = `o.ordered_at >= '${startOfThisMonth.toISOString()}'`;
+            previousPeriodFilter = `o.ordered_at BETWEEN '${startOfLastMonth.toISOString()}' AND '${endOfLastMonth.toISOString()}'`;
+        } else {
+            // Default to today and yesterday if no filters provided
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            currentPeriodFilter = `o.ordered_at::date = '${formatDate(today)}'`;
+            previousPeriodFilter = `o.ordered_at::date = '${formatDate(yesterday)}'`;
+        }
+
+        return { currentPeriodFilter, previousPeriodFilter };
     }
 
     async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {

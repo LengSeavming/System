@@ -22,10 +22,12 @@ export class DashboardController {
     }
     @Get('/cashier')
     async getCashierAndTotalSale(
-        @Query('year') year?: number,
-        @Query('week') week?: number,
+        @Query('today') today?: string,
+        @Query('yesterday') yesterday?: string,
+        @Query('thisWeek') thisWeek?: string,
+        @Query('thisMonth') thisMonth?: string,
     ) {
-        return await this._service.findCashierAndTotalSale({ year, week });
+        return await this._service.findCashierAndTotalSale({ today, yesterday, thisWeek, thisMonth });
     }
 
     @Get('/product-type')
