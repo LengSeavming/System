@@ -46,6 +46,7 @@
         "sequelize": "^6.37.4",
         "sequelize-typescript": "^2.1.6",
         "speakeasy": "^2.0.0",
+        "twilio": "^5.3.5",
         "useragent": "^2.3.0"
     },
     "devDependencies": {

@@ -188,6 +188,7 @@ export class UserService {
     async create(body: CreateUserDto, userId: number): Promise<Create> {
         let user: User;
         try {
+            
             // Check if a user with the same phone or email already exists
             user = await User.findOne({
                 where: {

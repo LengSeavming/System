@@ -174,10 +174,6 @@ export class DashboardService {
                 order: [[Sequelize.literal('"totalAmount"'), 'DESC']],
             });
 
-            if (cashiers.length === 0) {
-                console.log("No cashier data found for the specified filters.");
-            }
-
             return { data: cashiers };
         } catch (err) {
             console.error("Error fetching cashier data:", err.message);
@@ -235,25 +231,13 @@ export class DashboardService {
         return { currentPeriodFilter, previousPeriodFilter };
     }
 
-    async findProductTypeWithProductHaveUsed(filters: { year?: number; week?: number }) {
+    async findProductTypeWithProductHaveUsed(filters: { thisWeek?: string; thisMonth?: string; threeMonthAgo?: string; sixMonthAgo?: string; }) {
         try {
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentWeek = this.getWeekNumber(currentDate);
+            // Use date filter or default to 'this week'
+            const { startDate, endDate } = this.getDateRange(filters) || this.getDefaultWeekRange();
 
-            // Use the provided year and week or default to the current ones
-            const year = filters.year || currentYear;
-            const week = filters.week || currentWeek;
-
-            let dateCondition = '';
-
-            // If filters are provided, create the date condition for filtering
-            if (filters.year && filters.week) {
-                const startDate = this.getStartDateOfISOWeek(week, year);
-                const endDate = this.getEndDateOfISOWeek(week, year);
-
-                dateCondition = `AND p.created_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'`;
-            }
+            // Construct the SQL date condition
+            const dateCondition = `AND p.created_at BETWEEN '${startDate.toISOString()}' AND '${endDate.toISOString()}'`;
 
             const productTypesWithProductCounts = await ProductsType.findAll({
                 attributes: [
@@ -263,19 +247,18 @@ export class DashboardService {
                         SELECT COUNT(*)
                         FROM product AS p
                         WHERE p.type_id = "ProductsType".id
-                        ${dateCondition}  -- Apply the date condition if filters are present
+                        ${dateCondition}
                     )`), 'productCount'],
                 ],
                 include: [
                     {
                         model: Product,
-                        attributes: [],  // No need to retrieve product attributes, just count them
+                        attributes: [], // Only count, no need for product details
                     },
                 ],
                 group: ['ProductsType.id'],
             });
 
-            // Transform the data into the format expected by a donut chart: { labels: [], data: [] }
             const result = {
                 labels: productTypesWithProductCounts.map(pt => pt.name),
                 data: productTypesWithProductCounts.map(pt => pt.get('productCount')),
@@ -289,24 +272,20 @@ export class DashboardService {
         }
     }
 
-    async findDataSaleDayOfWeek(filters: { year?: number; week?: number }) {
+    async findDataSaleDayOfWeek(filters: {
+        thisWeek?: string;
+        thisMonth?: string;
+        threeMonthAgo?: string;
+        sixMonthAgo?: string;
+    }) {
         try {
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentWeek = this.getWeekNumber(currentDate);
+            // Use date filter or default to 'this week'
+            const { startDate, endDate } = this.getDateRange(filters) || this.getDefaultWeekRange();
 
-            // Use filters if provided, otherwise default to the current year and week
-            const year = filters.year || currentYear;
-            const week = filters.week || currentWeek;
-
-            // Get start and end date of the selected or current week
-            const startDate = this.getStartDateOfISOWeek(week, year);
-            const endDate = this.getEndDateOfISOWeek(week, year);
-
-            // Define an alias for the computed column
+            // Construct the SQL date condition using Sequelize
             const dateTrunc = Sequelize.fn('DATE', Sequelize.col('ordered_at'));
 
-            // Fetch total sales grouped by day of the week for the specified week
+            // Fetch total sales grouped by day of the week
             const salesData = await Order.findAll({
                 attributes: [
                     [dateTrunc, 'day'], // Use the alias for the computed date column
@@ -315,7 +294,10 @@ export class DashboardService {
                 where: {
                     [Op.and]: [
                         Sequelize.where(dateTrunc, {
-                            [Op.between]: [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
+                            [Op.between]: [
+                                startDate.toISOString().split('T')[0],
+                                endDate.toISOString().split('T')[0],
+                            ],
                         }),
                     ],
                 },
@@ -327,23 +309,19 @@ export class DashboardService {
             const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const salesByDay = weekDays.map(day => ({ day, total_sales: 0 }));
 
-            // Map sales data to the corresponding days of the week
+            // Map the sales data to the correct day of the week
             salesData.forEach(sale => {
                 const saleDayValue = sale.get('day') as string;
-
-                // Convert saleDayValue to Date
                 const saleDay = new Date(saleDayValue);
 
                 if (!isNaN(saleDay.getTime())) {
                     const saleDayOfWeek = saleDay.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-                    const dayIndex = saleDayOfWeek === 0 ? 6 : saleDayOfWeek - 1; // Adjust index (Sunday -> 6, Monday -> 0)
-
-                    // Update the corresponding day with the total sales
+                    const dayIndex = saleDayOfWeek === 0 ? 6 : saleDayOfWeek - 1; // Adjust Sunday to index 6
                     salesByDay[dayIndex].total_sales = parseFloat(sale.get('total_sales').toString());
                 }
             });
 
-            // Extract labels (days of the week) and data (total sales)
+            // Extract labels and data for the frontend chart
             const result = {
                 labels: salesByDay.map(s => s.day),
                 data: salesByDay.map(s => s.total_sales),
@@ -355,6 +333,44 @@ export class DashboardService {
             console.error("Error fetching sales data:", err.message);
             throw new BadRequestException(err.message);
         }
+    }
+
+    // Helper to get date range based on filters
+    private getDateRange(filters: {
+        thisWeek?: string;
+        thisMonth?: string;
+        threeMonthAgo?: string;
+        sixMonthAgo?: string;
+    }): { startDate: Date; endDate: Date } | null {
+        if (filters.thisWeek) return this.getDefaultWeekRange();
+        if (filters.thisMonth) return this.getMonthRange(0); // Current month
+        if (filters.threeMonthAgo) return this.getMonthRange(3); // Three months ago
+        if (filters.sixMonthAgo) return this.getMonthRange(6); // Six months ago
+        return null;
+    }
+
+    // Helper to get the current week range
+    private getDefaultWeekRange(): { startDate: Date; endDate: Date } {
+        const startDate = this.startOfWeek(new Date());
+        const endDate = this.endOfDay(new Date());
+        return { startDate, endDate };
+    }
+
+    // Helper to get a month range based on offset
+    private getMonthRange(monthOffset: number): { startDate: Date; endDate: Date } {
+        const startDate = this.startOfMonth(this.subtractMonths(new Date(), monthOffset));
+        const endDate = this.endOfDay(new Date());
+        return { startDate, endDate };
+    }
+
+    // Helper to subtract months safely
+    private subtractMonths(date: Date, months: number): Date {
+        const newDate = new Date(date);
+        newDate.setMonth(newDate.getMonth() - months);
+        if (date.getDate() !== newDate.getDate()) {
+            newDate.setDate(0); // Adjust for month-end edge cases
+        }
+        return newDate;
     }
 
     // Helper function to get the current week number
@@ -393,13 +409,24 @@ export class DashboardService {
     }
 
     // Helper method to construct date filter
-    private getDateFilter(filters: { today?: string, yesterday?: string, thisWeek?: string, thisMonth?: string }): any {
+    private getDateFilter(filters: {
+        today?: string,
+        yesterday?: string,
+        thisWeek?: string,
+        thisMonth?: string,
+        threeMonthAgo?: string,
+        sixMonthAgo?: string
+    }): any {
         const dateFilter: { [key: string]: any } = {};
+        const { Op } = require('sequelize'); // Ensure Sequelize operators are available
 
         if (filters.today) {
             const today = this.parseDate(filters.today);
             if (today) {
-                dateFilter['created_at'] = { [Op.gte]: this.startOfDay(today), [Op.lt]: this.endOfDay(today) };
+                dateFilter['created_at'] = {
+                    [Op.gte]: this.startOfDay(today),
+                    [Op.lt]: this.endOfDay(today)
+                };
             }
         } else if (filters.yesterday) {
             const yesterday = this.parseDate(filters.yesterday);
@@ -411,15 +438,39 @@ export class DashboardService {
             }
         } else if (filters.thisWeek) {
             const startOfWeek = this.startOfWeek(new Date());
-            dateFilter['created_at'] = { [Op.gte]: startOfWeek, [Op.lt]: this.endOfDay(new Date()) };
+            dateFilter['created_at'] = {
+                [Op.gte]: startOfWeek,
+                [Op.lt]: this.endOfDay(new Date())
+            };
         } else if (filters.thisMonth) {
             const startOfMonth = this.startOfMonth(new Date());
-            dateFilter['created_at'] = { [Op.gte]: startOfMonth, [Op.lt]: this.endOfDay(new Date()) };
+            dateFilter['created_at'] = {
+                [Op.gte]: startOfMonth,
+                [Op.lt]: this.endOfDay(new Date())
+            };
+        } else if (filters.threeMonthAgo) {
+            const startOfThreeMonthsAgo = this.startOfMonth(this.subtractMonths(new Date(), 3));
+            dateFilter['created_at'] = {
+                [Op.gte]: startOfThreeMonthsAgo,
+                [Op.lte]: this.endOfDay(new Date())  // Up to the end of today
+            };
+        } else if (filters.sixMonthAgo) {
+            const startOfSixMonthsAgo = this.startOfMonth(this.subtractMonths(new Date(), 6));
+            dateFilter['created_at'] = {
+                [Op.gte]: startOfSixMonthsAgo,
+                [Op.lte]: this.endOfDay(new Date())  // Up to the end of today
+            };
+        } else {
+            // Default to the current week if no filter is provided
+            const startOfWeek = this.startOfWeek(new Date());
+            dateFilter['created_at'] = {
+                [Op.gte]: startOfWeek,
+                [Op.lt]: this.endOfDay(new Date())
+            };
         }
 
         return dateFilter;
     }
-
     // Helper method to parse dates safely
     private parseDate(dateString: string): Date | null {
         const date = new Date(dateString);

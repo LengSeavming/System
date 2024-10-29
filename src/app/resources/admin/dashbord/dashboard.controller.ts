@@ -32,17 +32,22 @@ export class DashboardController {
 
     @Get('/product-type')
     async getProductTypeWithProductHaveUsed(
-        @Query('year') year?: number,
-        @Query('week') week?: number,
+        @Query('thisWeek') thisWeek?: string,
+        @Query('thisMonth') thisMonth?: string,
+        @Query('threeMonthAgo') threeMonthAgo?: string,
+        @Query('sixMonthAgo') sixMonthAgo?: string,
     ) {
-        return await this._service.findProductTypeWithProductHaveUsed({ year, week });
+        return await this._service.findProductTypeWithProductHaveUsed({ thisWeek, thisMonth, threeMonthAgo, sixMonthAgo });
     }
+
     @Get('/data-sale')
     async getDataSaleDayOfWeek(
-        @Query('year') year?: number,
-        @Query('week') week?: number,
+        @Query('thisWeek') thisWeek?: string,
+        @Query('thisMonth') thisMonth?: string,
+        @Query('threeMonthAgo') threeMonthAgo?: string,
+        @Query('sixMonthAgo') sixMonthAgo?: string,
     ) {
-        return await this._service.findDataSaleDayOfWeek({ year, week });
+        return await this._service.findDataSaleDayOfWeek({ thisWeek, thisMonth, threeMonthAgo, sixMonthAgo });
     }
 
 }
