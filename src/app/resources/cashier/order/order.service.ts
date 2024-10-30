@@ -137,12 +137,18 @@ export class OrderService {
 
             // Commit transaction after successful operations
             await transaction.commit();
-
+            const currentDateTime = await this.getCurrentDateTimeInCambodia();
             let htmlMessage = `<b>ការបញ្ជាទិញទទួលបានជោគជ័យ!</b>\n`;
-            htmlMessage += `-លេខវិកយប័ត្រ ៖ ${data.receipt_number}\n`;
-            htmlMessage += `-តម្លៃសរុប​​     ៖ ${data.total_price}\n`;
-            htmlMessage += `-អ្នកគិតលុយ   ៖ ${data.cashier?.name || ''}\n`;
-            htmlMessage += `-កាលបរិច្ឆេទ   ៖ ${data.ordered_at ? new Date(data.ordered_at).toLocaleString() : ''}\n`;
+            htmlMessage += `-លេខវិកយប័ត្រ`;
+            htmlMessage += `\u2003៖ ${data.receipt_number}\n`;
+            htmlMessage += `-តម្លៃសរុប​​​​`;
+            htmlMessage += `\u2003\u2003\u2003៖ ${this.formatPrice(data.total_price)} ៛\n`;
+            htmlMessage += `-អ្នកគិតលុយ`;
+            htmlMessage += `\u2003\u2003 ៖ ${data.cashier?.name || ''}\n`;
+            htmlMessage += `-តាមរយះ`;
+            htmlMessage += `\u2003\u2003\u2003 ៖ ${body.platform || ''}\n`;
+            htmlMessage += `-កាលបរិច្ឆេទ\u2003\u2003៖ ${currentDateTime}\n`;
+
             // Send
             await this.telegramService.sendHTMLMessage(htmlMessage);
 
@@ -188,6 +194,42 @@ export class OrderService {
         }
     }
 
+    private formatPrice(price: number): string {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(price);
+    }
+
+    private async getCurrentDateTimeInCambodia(): Promise<string> {
+        const now = new Date();
+
+        // Options for Cambodia time zone with 12-hour format
+        const options: Intl.DateTimeFormatOptions = {
+            timeZone: 'Asia/Phnom_Penh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true, // Use 12-hour format with AM/PM
+        };
+
+        const formatter = new Intl.DateTimeFormat('en-GB', options);
+        const parts = formatter.formatToParts(now);
+
+        // Extract date and time components
+        const day = parts.find(p => p.type === 'day')?.value;
+        const month = parts.find(p => p.type === 'month')?.value;
+        const year = parts.find(p => p.type === 'year')?.value;
+        const hour = parts.find(p => p.type === 'hour')?.value;
+        const minute = parts.find(p => p.type === 'minute')?.value;
+        const dayPeriod = parts.find(p => p.type === 'dayPeriod')?.value; // AM/PM
+
+        // Short date format: dd/mm/yyyy hh:mm AM/PM
+        return `${day}/${month}/${year} ${hour}:${minute} ${dayPeriod}`;
+    }
 
     // Private method to generate a unique receipt number
     private async _generateReceiptNumber(): Promise<number> {
