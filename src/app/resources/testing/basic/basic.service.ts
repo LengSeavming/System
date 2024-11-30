@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Injectable()
-export class DefaultFunctionService {
+export class BasicService {
 
     constructor() { };
 

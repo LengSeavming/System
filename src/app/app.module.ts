@@ -15,7 +15,7 @@ import { AdminModule } from './resources/admin/admin.module';
 import { CashierModule } from './resources/cashier/cashier.module';
 import { UtilsModule } from './utils/utils.module';
 
-import { DefaultFuncitonModule } from './resources/testing/default_function/default_function.module';
+import { BasicModule } from './resources/testing/basic/basic.module';
 
 // ======================== >> Code Starts Here << ========================== //
 @Module({
@@ -39,7 +39,7 @@ import { DefaultFuncitonModule } from './resources/testing/default_function/defa
         UtilsModule,
 
         //===================== Testing
-        DefaultFuncitonModule,
+        BasicModule,
 
         //===================== END OF ROLE USER
         RouterModule.register(appRoutes),

@@ -2,13 +2,13 @@
 import { Body, Controller, Get, Query } from '@nestjs/common';
 
 // =========================================================================>> Custom Library
-import { DefaultFunctionService } from './default_function.service';
+import { BasicService } from './basic.service';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Controller()
-export class DefaultFunctionController {
+export class BasicController {
 
-    constructor(private readonly _service: DefaultFunctionService) { };
+    constructor(private readonly _service: BasicService) { };
 
     // ====================================================>> Sum 1
     @Get('sum-1')

@@ -2,11 +2,11 @@
 import { Routes } from '@nestjs/core';
 
 // ===========================================================================>> Custom Library
-import { DefaultFuncitonModule } from './default_function/default_function.module';
+import { BasicModule } from './basic/basic.module';
 
 export const testingRoutes: Routes = [
     {
-        path: '/',
-        module: DefaultFuncitonModule
+        path: '/basic',
+        module: BasicModule
     }
 ];

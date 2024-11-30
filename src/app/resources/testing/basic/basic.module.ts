@@ -2,12 +2,12 @@
 import { Module } from '@nestjs/common';
 
 // =========================================================================>> Custom Library
-import { DefaultFunctionController } from './default_function.controller';
-import { DefaultFunctionService } from './default_function.service';
+import { BasicController } from './basic.controller';
+import { BasicService } from './basic.service';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
-    controllers: [DefaultFunctionController],
-    providers: [DefaultFunctionService]
+    controllers: [BasicController],
+    providers: [BasicService]
 })
-export class DefaultFuncitonModule { }
+export class BasicModule { }
