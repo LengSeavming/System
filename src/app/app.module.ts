@@ -16,6 +16,8 @@ import { CashierModule } from './resources/cashier/cashier.module';
 import { UtilsModule } from './utils/utils.module';
 
 import { BasicModule } from './resources/testing/basic/basic.module';
+import { TelegramModule } from './resources/testing/third-party/telegram/telegram.module';
+import { SMSModule } from './resources/testing/third-party/sms/sms.module';
 
 // ======================== >> Code Starts Here << ========================== //
 @Module({
@@ -40,6 +42,8 @@ import { BasicModule } from './resources/testing/basic/basic.module';
 
         //===================== Testing
         BasicModule,
+        TelegramModule,
+        SMSModule,
 
         //===================== END OF ROLE USER
         RouterModule.register(appRoutes),
