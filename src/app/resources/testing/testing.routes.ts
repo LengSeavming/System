@@ -6,7 +6,7 @@ import { DefaultFuncitonModule } from './default_function/default_function.modul
 
 export const testingRoutes: Routes = [
     {
-        path: 'testing',
+        path: '/',
         module: DefaultFuncitonModule
     }
 ];
