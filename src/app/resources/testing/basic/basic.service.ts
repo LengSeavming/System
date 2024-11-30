@@ -8,7 +8,7 @@ export class BasicService {
 
     constructor() { };
 
-    async sum1(): Promise<{ result: number }> {
+    async sum1(){
 
         // Variable Declaration
         let a = 10;
@@ -16,9 +16,9 @@ export class BasicService {
 
         const c = a + b;
 
-        const d = Math.sqrt(c); 
+        // const d = Math.sqrt(c); 
 
-        return { result: d };
+        return { result: c };
     }
 
     async sum2( a: number = 0, b: number = 0 ): Promise<{ result: number }> {
