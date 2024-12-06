@@ -2,7 +2,7 @@
 import { Body, Controller, Get, Query } from '@nestjs/common';
 
 // =========================================================================>> Custom Library
-import { TelegramService } from './telegram.service';
+import { TelegramService } from './report.service';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Controller()

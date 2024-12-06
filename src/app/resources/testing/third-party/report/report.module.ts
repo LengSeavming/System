@@ -2,8 +2,8 @@
 import { Module } from '@nestjs/common';
 
 // =========================================================================>> Custom Library
-import { TelegramController } from './telegram.controller';
-import { TelegramService } from './telegram.service';
+import { TelegramController } from './report.controller';
+import { TelegramService } from './report.service';
 
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
