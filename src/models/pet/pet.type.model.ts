@@ -1,15 +1,15 @@
 // ================================================================================================= Third Party Library
 import { Column, DataType, HasMany, Model, Table } from "sequelize-typescript";
+import Pet from "./pet.model";
 
 // ================================================================================================= Custom Library
-import Product from "./product.model";
 
 @Table({
-  tableName: "products_type",
+  tableName: "pet_type",
   createdAt: "created_at",
   updatedAt: "updated_at",
 })
-class ProductsType extends Model<ProductsType> {
+class PetType extends Model<PetType> {
   // ============================================================================================= Primary Key
   @Column({ primaryKey: true, autoIncrement: true }) id: number;
 
@@ -19,7 +19,7 @@ class ProductsType extends Model<ProductsType> {
   @Column({ allowNull: true, type: DataType.STRING(100) }) image?: string;
   created_at: Date;
   // ===========================================================================================>> One to Many
-  @HasMany(() => Product) products: Product[];
+  @HasMany(() => Pet) products: Pet[];
 }
 
-export default ProductsType;
+export default PetType;
