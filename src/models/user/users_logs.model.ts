@@ -10,7 +10,7 @@ import {
 import User from "./users.model";
 
 @Table({
-  tableName: "user_logs",
+  tableName: "user_log",
   createdAt: "created_at",
   updatedAt: "updated_at",
   deletedAt: "deleted_at",
