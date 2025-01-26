@@ -13,13 +13,14 @@ import {
 } from "@nestjs/common";
 
 // ===========================================================================>> Custom Library
-import { CreatePetTypeDto, UpdatePetTypeDto } from "./type.dto";
-import { PetTypeService } from "./type.service";
-import PetType from "@models/pet/pet.type.model";
+
+import { CreateBookTypeDto } from "./boo_type.dto";
+import { BookTypeService } from "./book_type.service";
+import BookType from "@models/book/book_type.model";
 
 @Controller()
-export class PetTypeController {
-  constructor(private _service: PetTypeService) {}
+export class BookTypeController {
+  constructor(private _service: BookTypeService) {}
 
   @Get("data")
   async getData(): Promise<{
@@ -35,15 +36,15 @@ export class PetTypeController {
 
   @Post()
   async create(
-    @Body() body: CreatePetTypeDto
-  ): Promise<{ data: PetType; message: string }> {
+    @Body() body: CreateBookTypeDto
+  ): Promise<{ data: BookType; message: string }> {
     return await this._service.create(body);
   }
 
   @Put(":id")
   update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() body: UpdatePetTypeDto
+    @Body() body: CreateBookTypeDto
   ): Promise<any> {
     return this._service.update(body, id);
   }

@@ -9,6 +9,7 @@ import { OrderSeeder } from "./seeds/pos/order.seeder";
 import { ProductSeeder } from "./seeds/pos/product.seeder";
 import { UserSeeder } from "./seeds/user/user.seed";
 import { PetSeeder } from "./seeds/pos/pet.seeder";
+import { BookSeeder } from "./seeds/pos/book.seeder";
 
 class SeederInitializer {
   private sequelize: Sequelize;
@@ -39,6 +40,7 @@ class SeederInitializer {
     await ProductSeeder.seed();
     await OrderSeeder.seed();
     await PetSeeder.seed();
+    await BookSeeder.seed();
   }
 
   private async handleSeedingError(error: Error) {

@@ -17,13 +17,13 @@ import UserDecorator from "@app/core/decorators/user.decorator";
 import { ProductsTypeExistsPipe } from "@app/core/pipes/product.pipe";
 import User from "@models/user/users.model";
 
-import { PetService } from "./pet.service";
-import Pet from "@models/pet/pet.model";
-import { CreatePetDto, UpdatePetDto } from "./pet.dto";
+import { BookService } from "./book.service";
+import { CreateBookDto, UpdateBookDto } from "./book.dto";
+import Book from "@models/book/book.model";
 
 @Controller()
-export class PetController {
-  constructor(private _service: PetService) {}
+export class BookController {
+  constructor(private _service: BookService) {}
 
   @Get("setup")
   async setup() {
@@ -63,12 +63,12 @@ export class PetController {
     return await this._service.view(id);
   }
 
-  @Post("animal")
+  @Post()
   @UsePipes(ProductsTypeExistsPipe)
   async create(
-    @Body() body: CreatePetDto,
+    @Body() body: CreateBookDto,
     @UserDecorator() auth: User
-  ): Promise<{ data: Pet; message: string }> {
+  ): Promise<{ data: Book; message: string }> {
     return await this._service.create(body, auth.id);
   }
 
@@ -76,7 +76,7 @@ export class PetController {
   @UsePipes(ProductsTypeExistsPipe)
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() body: UpdatePetDto
+    @Body() body: UpdateBookDto
   ) {
     return this._service.update(body, id);
   }

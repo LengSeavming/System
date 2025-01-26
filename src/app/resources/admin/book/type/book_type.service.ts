@@ -10,13 +10,12 @@ import { Op, Sequelize } from "sequelize";
 
 // ===========================================================================>> Custom Library
 import { FileService } from "@app/services/file.service";
-
-import PetType from "@models/pet/pet.type.model";
-import { CreatePetTypeDto, UpdatePetTypeDto } from "./type.dto";
-import Pet from "@models/pet/pet.model";
+import BookType from "@models/book/book_type.model";
+import Book from "@models/book/book.model";
+import { CreateBookTypeDto } from "./boo_type.dto";
 
 @Injectable()
-export class PetTypeService {
+export class BookTypeService {
   constructor(private readonly fileService: FileService) {}
 
   // ==========================================>> get data
@@ -28,7 +27,7 @@ export class PetTypeService {
       n_of_products: number;
     }[];
   }> {
-    const data = await PetType.findAll({
+    const data = await BookType.findAll({
       attributes: [
         "id",
         "name",
@@ -38,11 +37,11 @@ export class PetTypeService {
       ],
       include: [
         {
-          model: Pet,
+          model: Book,
           attributes: [], // We don't need any product attributes, just the count
         },
       ],
-      group: ["PetType.id"], // Group by the ProductsType id
+      group: ["BookType.id"], // Group by the ProductsType id
       order: [["name", "ASC"]], // Order by name
     });
 
@@ -68,9 +67,9 @@ export class PetTypeService {
 
   // ==========================================>> create
   async create(
-    body: CreatePetTypeDto
-  ): Promise<{ data: PetType; message: string }> {
-    const checkExistName = await PetType.findOne({
+    body: CreateBookTypeDto
+  ): Promise<{ data: BookType; message: string }> {
+    const checkExistName = await BookType.findOne({
       where: { name: body.name },
     });
     if (checkExistName) {
@@ -86,7 +85,7 @@ export class PetTypeService {
     // Replace base64 string by file URI from FileService
     body.image = result.file.uri;
 
-    const productType = await PetType.create({
+    const productType = await BookType.create({
       name: body.name,
       image: "abc",
     });
@@ -94,17 +93,17 @@ export class PetTypeService {
     const dataFormat = {
       data: productType,
       message: "Product type has been created.",
-    } as { data: PetType; message: string };
+    } as { data: BookType; message: string };
 
     return dataFormat;
   }
 
   // ==========================================>> update
   async update(
-    body: UpdatePetTypeDto,
+    body: CreateBookTypeDto,
     id: number
-  ): Promise<{ data: PetType; message: string }> {
-    const checkExist = await PetType.findByPk(id);
+  ): Promise<{ data: BookType; message: string }> {
+    const checkExist = await BookType.findByPk(id);
     if (!checkExist) {
       throw new BadRequestException("គ្មានទិន្នន័យនៅក្នុងប្រព័ន្ធ");
     }
@@ -121,7 +120,7 @@ export class PetTypeService {
     } else {
       body.image = undefined;
     }
-    const checkExistName = await PetType.findOne({
+    const checkExistName = await BookType.findOne({
       where: {
         id: { [Op.not]: id },
         name: body.name,
@@ -130,16 +129,16 @@ export class PetTypeService {
     if (checkExistName) {
       throw new BadRequestException("ឈ្មោះនេះមានក្នុងប្រព័ន្ធ");
     }
-    await PetType.update(body, {
+    await BookType.update(body, {
       where: { id: id },
     });
 
     const dataFormat = {
-      data: await PetType.findByPk(id, {
+      data: await BookType.findByPk(id, {
         attributes: ["id", "name", "image", "updated_at"],
       }),
-      message: "Product type has been created.",
-    } as { data: PetType; message: string };
+      message: "Books type has been created.",
+    } as { data: BookType; message: string };
     return dataFormat;
   }
 
@@ -147,7 +146,7 @@ export class PetTypeService {
   async delete(id: number): Promise<{ message: string }> {
     try {
       // Check if there are associated products
-      const productsCount = await Pet.count({
+      const productsCount = await Book.count({
         where: {
           type_id: id,
         },
@@ -155,19 +154,19 @@ export class PetTypeService {
 
       if (productsCount > 0) {
         throw new BadRequestException(
-          "Cannot delete. Products are associated with this ProductsType."
+          "Cannot delete. Products are associated with this BooksType."
         );
       }
 
       // No associated products, proceed with deletion
-      const rowsAffected = await PetType.destroy({
+      const rowsAffected = await BookType.destroy({
         where: {
           id: id,
         },
       });
 
       if (rowsAffected === 0) {
-        throw new NotFoundException("Products type not found.");
+        throw new NotFoundException("Books type not found.");
       }
 
       return { message: "Data has been deleted successfully." };

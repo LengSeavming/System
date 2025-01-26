@@ -14,19 +14,20 @@ import Order from "@models/order/order.model";
 import User from "@models/user/users.model";
 import { FileService } from "src/app/services/file.service";
 
-import Pet from "@models/pet/pet.model";
-import { CreatePetDto, UpdatePetDto } from "./pet.dto";
-import PetType from "@models/pet/pet.type.model";
-import { List } from "./pet.type";
+import BookType from "@models/book/book_type.model";
+import Book from "@models/book/book.model";
+
+import { List } from "./book.type";
+import { CreateBookDto, UpdateBookDto } from "./book.dto";
 
 @Injectable()
-export class PetService {
+export class BookService {
   constructor(private readonly fileService: FileService) {}
 
   // Method to retrieve the setup data for product types
   async setup() {
     // Fetch product types
-    const petType = await PetType.findAll({
+    const productTypes = await BookType.findAll({
       attributes: ["id", "name"],
     });
 
@@ -36,7 +37,7 @@ export class PetService {
     });
     return {
       data: {
-        petType,
+        BookType,
         users,
       },
     };
@@ -88,7 +89,7 @@ export class PetService {
       };
 
       // Retrieve products with associated product types and users
-      const data = await Pet.findAll({
+      const data = await Book.findAll({
         attributes: [
           "id",
           "code",
@@ -98,17 +99,17 @@ export class PetService {
           "created_at",
           [
             literal(`(
-                  SELECT SUM(qty) 
-                  FROM order_details AS od 
-                  WHERE od.product_id = "Pet"."id"
-                )`),
+                    SELECT SUM(qty) 
+                    FROM order_details AS od 
+                    WHERE od.product_id = "Pet"."id"
+                  )`),
             "total_sale",
           ],
         ],
         where,
         include: [
           {
-            model: PetType,
+            model: BookType,
             attributes: ["id", "name"],
           },
           {
@@ -127,7 +128,7 @@ export class PetService {
       });
 
       // Calculate the total count for pagination
-      const totalCount = await Pet.count({ where });
+      const totalCount = await Book.count({ where });
 
       // Calculate the total pages based on the total count
       const totalPages = Math.ceil(totalCount / page_size);
@@ -171,9 +172,9 @@ export class PetService {
           attributes: ["id", "unit_price", "qty"],
           include: [
             {
-              model: Pet,
+              model: Book,
               attributes: ["id", "name", "code", "image"],
-              include: [{ model: PetType, attributes: ["name"] }],
+              include: [{ model: BookType, attributes: ["name"] }],
             },
           ],
         },
@@ -187,11 +188,11 @@ export class PetService {
 
   // Method to create a new product
   async create(
-    body: CreatePetDto,
+    body: CreateBookDto,
     creator_id: number
-  ): Promise<{ data: Pet; message: string }> {
+  ): Promise<{ data: Book; message: string }> {
     // Check if the product code already exists
-    const checkExistCode = await Pet.findOne({
+    const checkExistCode = await Book.findOne({
       where: { code: body.code },
     });
     if (checkExistCode) {
@@ -199,7 +200,7 @@ export class PetService {
     }
 
     // Check if the product name already exists
-    const checkExistName = await Pet.findOne({
+    const checkExistName = await Book.findOne({
       where: { name: body.name },
     });
     if (checkExistName) {
@@ -217,11 +218,11 @@ export class PetService {
     body.image = result.file.uri;
 
     // Create the new product
-    const product = await Pet.create({
+    const product = await Book.create({
       ...body,
       creator_id,
     });
-    const data = await Pet.findByPk(product.id, {
+    const data = await Book.findByPk(product.id, {
       attributes: [
         "id",
         "code",
@@ -231,14 +232,14 @@ export class PetService {
         "created_at",
         [
           literal(
-            `(SELECT COUNT(*) FROM order_details AS od WHERE od.product_id = "Pet"."id" )`
+            `(SELECT COUNT(*) FROM order_details AS od WHERE od.product_id = "Book"."id" )`
           ),
           "total_sale",
         ],
       ],
       include: [
         {
-          model: PetType,
+          model: BookType,
           attributes: ["id", "name"],
         },
         {
@@ -260,17 +261,17 @@ export class PetService {
 
   // Method to update an existing product
   async update(
-    body: UpdatePetDto,
+    body: UpdateBookDto,
     id: number
-  ): Promise<{ data: Pet; message: string }> {
+  ): Promise<{ data: Book; message: string }> {
     // Check if the product with the given ID exists
-    const checkExist = await Pet.findByPk(id);
+    const checkExist = await Book.findByPk(id);
     if (!checkExist) {
       throw new BadRequestException("No data found for the provided ID.");
     }
 
     // Check if the updated code already exists for another product
-    const checkExistCode = await Pet.findOne({
+    const checkExistCode = await Book.findOne({
       where: {
         id: { [Op.not]: id },
         code: body.code,
@@ -281,7 +282,7 @@ export class PetService {
     }
 
     // Check if the updated name already exists for another product
-    const checkExistName = await Pet.findOne({
+    const checkExistName = await Book.findOne({
       where: {
         id: { [Op.not]: id },
         name: body.name,
@@ -306,10 +307,10 @@ export class PetService {
     }
 
     // Update the product
-    await Pet.update(body, {
+    await Book.update(body, {
       where: { id: id },
     });
-    const data = await Pet.findByPk(id, {
+    const data = await Book.findByPk(id, {
       attributes: [
         "id",
         "code",
@@ -319,14 +320,14 @@ export class PetService {
         "created_at",
         [
           literal(
-            `(SELECT COUNT(*) FROM order_details AS od WHERE od.product_id = "Pet"."id" )`
+            `(SELECT COUNT(*) FROM order_details AS od WHERE od.product_id = "Book"."id" )`
           ),
           "total_sale",
         ],
       ],
       include: [
         {
-          model: PetType,
+          model: BookType,
           attributes: ["id", "name"],
         },
         {
@@ -351,7 +352,7 @@ export class PetService {
   async delete(id: number): Promise<{ message: string }> {
     try {
       // Attempt to delete the product
-      const rowsAffected = await Pet.destroy({
+      const rowsAffected = await Book.destroy({
         where: {
           id: id,
         },
@@ -359,10 +360,10 @@ export class PetService {
 
       // Check if the product was found and deleted
       if (rowsAffected === 0) {
-        throw new NotFoundException("Product not found.");
+        throw new NotFoundException("Book not found.");
       }
 
-      return { message: "This pet has been deleted successfully." };
+      return { message: "This Book has been deleted successfully." };
     } catch (error) {
       // Handle any errors during the delete operation
       throw new BadRequestException(

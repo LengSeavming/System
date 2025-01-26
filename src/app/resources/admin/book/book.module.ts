@@ -2,12 +2,14 @@
 import { Module } from "@nestjs/common";
 
 // ===========================================================================>> Costom Library
+
+// Custom Components:
 import { FileService } from "src/app/services/file.service";
-import { UserController } from "./user.controller";
-import { UserService } from "./user.service";
+import { BookController } from "./book.controller";
+import { BookService } from "./book.service";
+
 @Module({
-  providers: [UserService, FileService],
-  controllers: [UserController],
-  imports: [],
+  controllers: [BookController],
+  providers: [BookService, FileService],
 })
-export class UserModule {}
+export class BookModule {}

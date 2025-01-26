@@ -18,6 +18,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
 import { SaleModule } from "./sale/sale.module";
 import { PetModule } from "./pet/pet.module";
 import { PetTypeModule } from "./pet/type/type.module";
+import { BookModule } from "./book/book.module";
 
 // ======================================= >> Code Starts Here << ========================== //
 @Module({
@@ -29,6 +30,7 @@ import { PetTypeModule } from "./pet/type/type.module";
     UserModule,
     PetModule,
     PetTypeModule,
+    BookModule,
   ],
 })
 export class AdminModule implements NestModule {
