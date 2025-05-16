@@ -1,0 +1,123 @@
+version: "3.8"
+services:
+  #===================================>> Database
+  postgres:
+    image: postgres:latest
+    container_name: pos-db-v4
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "9001:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pw@2024
+      POSTGRES_DB: pos
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    networks:
+      - pos
+
+  # ===============================>> pgAdmin
+  # db-tool:
+  #   image: dpage/pgadmin4
+  #   container_name: pos-pgadmin-v4
+  #   restart: always
+  #   ports:
+  #     - "9002:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: postgres@camcyber.com
+  #     PGADMIN_DEFAULT_PASSWORD: pw@2024
+  #   volumes:
+  #     - ./pgadmin:/var/lib/pgadmin
+  #   networks:
+  #     - pos
+
+  #==============================================>> API
+  # api:
+  #   container_name: pos-api-v4
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./api-v4/.
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9003:3000"
+  #   environment:
+  #     APP: pos
+
+  #     #==========================>> DB Config
+  #     DB_CONNECTION: postgres
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: pw@2024
+  #     DB_DATABASE: pos
+
+  #     #==========================>> JWT
+  #     JWT_SECRET: "6d8d73f7e3c0a76b1ad3cbf0c04a9b7d3c83a8e07f1e8a6d9e2efcb876c94e3fbd7c2a7851b1f98b7b2bfb0b31c27c5b"
+  #     JWT_EXPIRES: "1w"
+
+  #     #==========================>> File
+  #     FILE_BASE_URL: http://container_file:8080 # Pointing to 'file' service within the Docker network
+
+  #     #==========================>> Js report
+  #     JS_BASE_URL: https://suvannet.jsreportonline.net
+  #     JS_USERNAME: chansuvannet999@gmail.com
+  #     JS_PASSWORD: NET168luckily
+  #     JS_TEMPLATE: /Invoice/main
+
+  #     #===========================>> Telegram Bot
+  #     TELEGRAM_BOT_TOKEN: 7593739467:AAENNf38VttIRP0VMWaq1R2Aq-uMIaF26OQ
+  #     TELEGRAM_CHAT_ID: 1099740653
+  #   volumes:
+  #     - ./api-v4/src:/myapp/src
+  #   networks:
+  #     - pos
+
+  #==============================================>> Web
+  # web:
+  #   container_name: pos-web-v4
+  #   build:
+  #     context: ./web-v4/.
+  #     dockerfile: Dockerfile
+  #     args:
+  #       API_BASE_URL: http://localhost:9003/api
+  #       FILE_BASE_URL: http://localhost:9006/
+  #       SOCKET_URL: http://localhost:9003
+  #       RecaptchaSiteKey: 6Le3dNIoAAAAAHnbjHGdpgEA_L4VKPRVm2pLhMtw
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9004:80"
+  #   networks:
+  #     - pos
+
+  #==============================================>> File Service
+  # file:
+  #   container_name: container_file
+  #   build:
+  #     context: ./file-v3/.
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./file-v3/src:/app/src #remove on Prod
+  #     - ./file-v3/public:/app/public
+  #   ports:
+  #     - "9006:8080"
+  #   environment:
+  #     PORT: 8080
+  #     DB_CONNECTION: postgres
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_USERNAME: postgres
+  #     DB_PASSWORD: pw@2024
+  #     DB_DATABASE: postgres # Secondary database for file service
+  #     #===========================>> Application
+  #     APP_NAME: File Service
+  #     APP_KEY: base64:0RxlCIx0KnpD/TeoOaIKxgH6iu2cmrys3GO4y5cp5Rg=
+  #     APP_DEBUG: 1
+  #     APP_ENV: dev
+  #     APP_URL: http://localhost
+  #   networks:
+  #     - pos
+
+networks:
+  pos:
+    driver: bridge

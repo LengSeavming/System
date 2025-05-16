@@ -1,0 +1,71 @@
+[33m7ce1bc7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m commit api
+[33mad2ce96[m Add .gitattributes for line ending normalization
+[33m85f214e[m resolve conflitch
+[33mff98479[m my code
+[33m287c510[m except route
+[33m07ebffd[m Merge branch 'rename' into 'master'
+[33mb5a936c[m create service and route for third party testing
+[33mb5e40bb[m rename report file
+[33mbf4dd01[m report
+[33m862cc05[m review code
+[33m009becb[m rename table
+[33m615de41[m update version
+[33m6bc3c8d[m Merge branch 'imp-comment' into 'master'
+[33m2b15488[m add comment to product type
+[33m5268b42[m move logic management from service to controller
+[33m8ecb639[m SMS for testing
+[33m8acf68f[m Add Basic code
+[33m34a34a7[m remove unused fuciton
+[33mc1415df[m default function
+[33m4e9e5d6[m add route testing
+[33m0540783[m fix error
+[33m99bd95b[m fix issues
+[33mb26d044[m fix messsage to telegram
+[33ma177712[m deletd sms
+[33m9ea65b9[m add send SMS and modify filter
+[33m70a4631[m clean code
+[33m001781c[m login with opt
+[33m741d8cb[m add device for login
+[33me65636b[m update model for get log user
+[33mde78a46[m add model and make search filter
+[33ma2c1bb4[m update feature
+[33m303956c[m stop send file to telegram
+[33m11d7da6[m create report
+[33mb5c3da4[m add total sale
+[33m6bd682c[m fix switch role
+[33m66d0086[m create socket
+[33m37fef96[m fix code
+[33m200feb3[m chnage call to file service
+[33m734b0a5[m change image to file service
+[33mde5504a[m Merge branch 'master' of gitlab.camcyber.com:pos/v2/api-v4
+[33mdef57df[m set defual role
+[33ma9b743c[m Merge branch 'main' into 'master'
+[33mdef28f1[m add view
+[33mb7e6233[m Merge branch 'main' into 'master'
+[33m46b5a32[m create message to tg
+[33m1c3fb65[m Merge branch 'main' into 'master'
+[33mf81e628[m fix errror
+[33mf2bd550[m Merge branch 'main' into 'master'
+[33md9e0669[m create notification
+[33m8a6c3b6[m Merge branch 'main' into 'master'
+[33mfd22ad2[m add att created_at  at when swith role
+[33m7e8a7f9[m Merge branch 'main' into 'master'
+[33mcd05785[m comment on the code and make a custom library
+[33m783b365[m Merge branch 'main' into 'master'
+[33m7ee10aa[m put docker file
+[33m1c7dc3f[m Merge branch 'main' into 'master'
+[33m0ebe062[m clean up code
+[33mc2b1ed4[m Merge branch 'main' into 'master'
+[33me3300d6[m update final code
+[33m78b52b8[m Merge branch 'main' into 'master'
+[33m1755061[m clean up code
+[33md707ba8[m Merge branch 'main' into 'master'
+[33mc0e3082[m Merge branch 'master' into 'main'
+[33mf5754b7[m push code
+[33me4071e7[m push code
+[33mded514e[m only one more
+[33m32c7cd8[m push code
+[33m1631f03[m Initial commit
+[33m678ec09[m push code
+[33mdfc0409[m create first code
+[33m4e9edb3[m Initial commit
